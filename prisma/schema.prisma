@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int           @id @default(autoincrement())
+  email           String        @unique
+  name            String
+  password        String
+  profileImage    String?
+  profilePublicId String?
+  profileColor    String
+  gender          Gender?
+  date_of_birth   DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  Appointment     Appointment[]
+  Doctor          Doctor?
+}
+
+model Doctor {
+  id          Int           @id @default(autoincrement())
+  userId      Int           @unique
+  specialty   Specialty
+  degree      String
+  experience  Int
+  fee         Int
+  about       String?
+  isActive    Boolean       @default(true)
+  profile     User          @relation(fields: [userId], references: [id])
+  addresses   Json
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  Appointment Appointment[]
+}
+
+enum Role {
+  ADMIN
+  DOCTOR
+  PATIENT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHERS
+}
+
+enum Specialty {
+  GeneralPhysician
+  Gynecologist
+  Dermatologist
+  Pediatrician
+  Neurologist
+  Gastroenterologist
+  Psychologist
+  Cardiologist
+  OrthopedicSurgeon
+}
+
+model Appointment {
+  id               Int      @id @default(autoincrement())
+  appointment_date DateTime
+  appointment_time String
+  patientId        Int
+  patient          User     @relation(fields: [patientId], references: [id])
+  doctorId         Int
+  doctor           Doctor   @relation(fields: [doctorId], references: [id])
+  isCancel         Boolean  @default(false)
+}
