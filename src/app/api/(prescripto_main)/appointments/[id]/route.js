@@ -3,7 +3,7 @@ import { getIdFromParams } from "../../../../../../lib/UserHelpers";
 
 export const POST = async (req, { params }) => {
     try {
-        const id = await getIdFromParams(params);
+        const id = getIdFromParams(params);
         await prisma.appointment.update({
             where: { id },
             data: {

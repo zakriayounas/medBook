@@ -54,7 +54,7 @@ const getDoctorBookedSlots = async (id) => {
 
 export const GET = async (req, { params }) => {
     try {
-        const id = await getIdFromParams(params);
+        const id = getIdFromParams(params);
 
         // Fetch the doctor data
         const doctor = await prisma.doctor.findUnique({
@@ -104,7 +104,7 @@ export const GET = async (req, { params }) => {
 
 export const POST = async (req, { params }) => {
     try {
-        const id = await getIdFromParams(params);
+        const id = getIdFromParams(params);
 
         const {
             name,
@@ -147,7 +147,7 @@ export const POST = async (req, { params }) => {
 
 export const DELETE = async (req, { params }) => {
     try {
-        const id = await getIdFromParams(params);
+        const id = getIdFromParams(params);
         const doctor = await prisma.doctor.delete({
             where: { id },
         });
