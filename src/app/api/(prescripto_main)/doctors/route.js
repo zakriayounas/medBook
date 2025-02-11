@@ -1,37 +1,39 @@
 import { NextResponse } from "next/server";
 import prisma from "../../../../../lib/prisma";
-import { createUser } from "../../../../../lib/UserHelpers";
+import { createUser, getQueryFilters } from "../../../../../lib/UserHelpers";
 import { validateRequiredFields } from "../../../../../lib/validator";
-import { validateIsDoctorExist } from "../../../../../lib/doctorHelper";
+import { validateIsDoctorExists } from "../../../../../lib/doctorHelper";
+import { addDefaultSchedule } from "../../../../../lib/doctorSchedule";
 
 export const GET = async (req) => {
-    const { searchParams } = new URL(req.url);
-    const specialties = searchParams.get("specialties");
-    let specialtyQuery = {};
-
-    if (specialties) {
-        const specialtyArray = specialties.split(",");
-        specialtyQuery = {
-            OR: specialtyArray.map((spec) => ({ specialty: spec })),
-        };
-    }
+    const { whereClause, limitRecords, skipRecords, orderBy } = getQueryFilters(req)
     try {
-        const doctors = await prisma.doctor.findMany({
-            where: specialties ? specialtyQuery : {},
+        const doctors = await prisma.doctors.findMany({
+            where: whereClause,
             select: {
                 id: true,
-                name: true,
                 specialty: true,
                 isActive: true,
-                profileColor: true,
-                profileImage: true,
+                profile: {
+                    select: {
+                        name: true,
+                        profileColor: true,
+                        profileImage: true,
+                        gender: true,
+                    },
+                },
             },
+            orderBy, // Sorting applied here
+            skip: skipRecords, // Pagination skip
+            take: limitRecords, // Pagination limit
         });
+
         return NextResponse.json({ status: 200, doctors });
     } catch (error) {
         return NextResponse.json({ status: 500, error: error.message });
     }
 };
+
 
 export const POST = async (req) => {
     try {
@@ -70,18 +72,28 @@ export const POST = async (req) => {
         const file = formData.get("profileImage");
 
         // Call createUser and pass `isDoctor: true` for doctor-specific creation
-        const newUser = await createUser({ name, password, confirm_password: password, email, file, isDoctor: true });
+        const newUser = await createUser({
+            name,
+            password,
+            confirm_password: password,
+            email,
+            file,
+            isDoctor: true,
+        });
 
         // If user creation fails, return the error
         if (!newUser.success) {
             return NextResponse.json({ message: newUser.error, status: 400 });
         }
-        const { exists } = await validateIsDoctorExist(newUser.user.id)
+        const { exists } = await validateIsDoctorExists({ userId: newUser.user.id });
         if (exists) {
-            return NextResponse.json({ error: "Doctor already exists with this email", status: 400 });
+            return NextResponse.json({
+                error: "Doctor already exists with this email",
+                status: 400,
+            });
         }
         // Create the doctor record
-        const doctor = await prisma.doctor.create({
+        const doctor = await prisma.doctors.create({
             data: {
                 specialty,
                 degree,
@@ -90,7 +102,7 @@ export const POST = async (req) => {
                 about,
                 isActive: Boolean(isActive),
                 addresses,
-                userId: newUser.user.id  // Get the user ID from the successful user creation
+                userId: newUser.user.id, // Get the user ID from the successful user creation
             },
             include: {
                 profile: {
@@ -98,16 +110,16 @@ export const POST = async (req) => {
                         name: true,
                         profileColor: true,
                         profileImage: true,
-                        profilePublicId: true
-                    }
-                }
-            }
+                        profilePublicId: true,
+                    },
+                },
+            },
         });
-
+        await addDefaultSchedule(doctor.id);
         return NextResponse.json(
             {
                 doctor,
-                message: "Doctor added successfully!"
+                message: "Doctor added successfully!",
             },
             { status: 200 }
         );
@@ -115,4 +127,3 @@ export const POST = async (req) => {
         return NextResponse.json({ message: error.message }, { status: 500 });
     }
 };
-

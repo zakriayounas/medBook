@@ -29,15 +29,38 @@ export const convertTo24Hour = (time) => {
         .toString()
         .padStart(2, "0")}`;
 };
+export const getWeekStartEndDate = () => {
+    const currentDate = new Date();
+    const endDate = new Date(currentDate);
+    endDate.setDate(currentDate.getDate() + 7);
+    return { currentDate, endDate };
+};
 
+export function getDayOfWeek(date) {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[date.getUTCDay()];
+}
+export const formatToLocalISOString = (appointmentDate) => {
+    // Split the input date and time
+    const [datePart, timePart] = appointmentDate.split(" ");
 
-export const convertToSQLDatetime = (dateString, timeString) => {
-    // Combine date and time into a single string
-    const dateTimeString = `${dateString} ${timeString}`;
+    // Extract date and time components
+    const [year, month, day] = datePart.split("-");
+    const [hours, minutes] = timePart.split(":");
 
-    // Parse the date and time exactly as given by the user, without converting to UTC
-    const formattedDateTime = moment(dateTimeString, "YYYY-MM-DD hh:mm A").format("YYYY-MM-DD HH:mm:ss");
+    // Create a new Date object using the local timezone
+    const localDate = new Date(
+        Number(year),
+        Number(month) - 1, // Month is zero-based in JavaScript Date
+        Number(day),
+        Number(hours),
+        Number(minutes)
+    );
 
-    // Return the formatted date time in the SQL-compatible format
-    return formattedDateTime;
+    // Manually format to "YYYY-MM-DDTHH:mm:ss"
+    const formattedDate = `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, "0")}-${String(
+        localDate.getDate()
+    ).padStart(2, "0")}T${String(localDate.getHours()).padStart(2, "0")}:${String(localDate.getMinutes()).padStart(2, "0")}:00`;
+
+    return formattedDate;
 };

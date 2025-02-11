@@ -4,7 +4,7 @@ import { getIdFromParams } from "../../../../../../lib/UserHelpers";
 export const POST = async (req, { params }) => {
     try {
         const id = getIdFromParams(params);
-        await prisma.appointment.update({
+        await prisma.appointments.update({
             where: { id },
             data: {
                 isCancel: true

@@ -5,7 +5,7 @@ import { extractUserId, getUserWithoutPassword } from "../../../../../../lib/Use
 export const GET = async (req) => {
     try {
         const userId = extractUserId(req);
-        const existingUser = await prisma.user.findUnique({
+        const existingUser = await prisma.users.findUnique({
             where: { id: userId },
         });
 

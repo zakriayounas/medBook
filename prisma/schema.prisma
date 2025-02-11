@@ -7,36 +7,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id              Int           @id @default(autoincrement())
-  email           String        @unique
+model Users {
+  id              Int            @id @default(autoincrement())
+  email           String         @unique
   name            String
   password        String
   profileImage    String?
   profilePublicId String?
   profileColor    String
   gender          Gender?
-  date_of_birth   DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  Appointment     Appointment[]
-  Doctor          Doctor?
+  role            Role?
+  dateOfBirth     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  Appointment     Appointments[]
+  Doctor          Doctors?
 }
 
-model Doctor {
-  id          Int           @id @default(autoincrement())
-  userId      Int           @unique
-  specialty   Specialty
-  degree      String
-  experience  Int
-  fee         Int
-  about       String?
-  isActive    Boolean       @default(true)
-  profile     User          @relation(fields: [userId], references: [id])
-  addresses   Json
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  Appointment Appointment[]
+model Doctors {
+  id              Int               @id @default(autoincrement())
+  userId          Int               @unique
+  specialty       Specialty
+  degree          String
+  experience      Int
+  fee             Int
+  about           String?
+  isActive        Boolean           @default(true)
+  profile         Users             @relation(fields: [userId], references: [id])
+  addresses       Json
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  Appointment     Appointments[]
+  DoctorSchedules DoctorSchedules[]
 }
 
 enum Role {
@@ -63,13 +65,35 @@ enum Specialty {
   OrthopedicSurgeon
 }
 
-model Appointment {
-  id               Int      @id @default(autoincrement())
-  appointment_date DateTime
-  appointment_time String
-  patientId        Int
-  patient          User     @relation(fields: [patientId], references: [id])
-  doctorId         Int
-  doctor           Doctor   @relation(fields: [doctorId], references: [id])
-  isCancel         Boolean  @default(false)
+model Appointments {
+  id              Int      @id @default(autoincrement())
+  appointmentDate DateTime
+  patientId       Int
+  patient         Users    @relation(fields: [patientId], references: [id])
+  doctorId        Int
+  doctor          Doctors  @relation(fields: [doctorId], references: [id])
+  isCancel        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model DoctorSchedules {
+  scheduleId Int       @id @default(autoincrement())
+  doctorId   Int
+  day        DayOfWeek
+  duration   Int       @default(30)
+  startTime  String
+  endTime    String
+
+  doctor Doctors @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+}
+
+enum DayOfWeek {
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+  Saturday
+  Sunday
 }

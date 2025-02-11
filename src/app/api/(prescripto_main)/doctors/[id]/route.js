@@ -1,65 +1,42 @@
 import { NextResponse } from "next/server";
+import { generateAvailableSlots, getDoctorBookedSlots, getDoctorSchedules } from "../../../../../../lib/doctorSchedule";
 import prisma from "../../../../../../lib/prisma";
 import {
     getIdFromParams,
     getUserWithoutPassword,
 } from "../../../../../../lib/UserHelpers";
-import bcrypt from "bcrypt";
-import { includeDoctorFullProfile } from "../../../../../../lib/doctorHelper";
-const getDoctorBookedSlots = async (id) => {
-    try {
-        const currentDate = new Date();
-        const endDate = new Date();
-        endDate.setDate(currentDate.getDate() + 7);
-
-        // Fetch the appointments without grouping
-        const bookedSlots = await prisma.appointment.findMany({
-            where: {
-                doctorId: id,
-                isCancel: false,
-                appointment_date: {
-                    gte: currentDate,
-                    lte: endDate,
-                },
-            },
-            select: {
-                appointment_date: true,
-                appointment_time: true,
-            },
-            orderBy: {
-                appointment_date: "asc"
-            }
-        });
-
-        // Group the appointments by date
-        const groupedSlots = bookedSlots.reduce((acc, slot) => {
-            const dateKey = slot.appointment_date.toISOString().split("T")[0]; // Format date as YYYY-MM-DD
-            const formattedTime = slot.appointment_time; // Assuming time is already formatted as a string
-
-            if (!acc[dateKey]) {
-                acc[dateKey] = [];
-            }
-
-            acc[dateKey].push(formattedTime);
-
-            return acc;
-        }, {});
-
-        return { success: true, bookedSlots: groupedSlots };
-    } catch (error) {
-        console.error("Error fetching booked slots:", error);
-        return { success: false, error };
-    }
-};
-
+// Example usage in your GET function
 export const GET = async (req, { params }) => {
     try {
         const id = getIdFromParams(params);
+        const doctorSchedules = await getDoctorSchedules(id);
+        const { success, bookedTimes, error } = await getDoctorBookedSlots(id);
 
-        // Fetch the doctor data
-        const doctor = await prisma.doctor.findUnique({
+        if (!success) {
+            return NextResponse.json({
+                status: 500,
+                error: error.message || "Failed to fetch booked slots",
+            });
+        }
+
+        // Generate available slots for the week
+        const availableSlots = await generateAvailableSlots(
+            doctorSchedules,
+            bookedTimes
+        );
+
+        const doctor = await prisma.doctors.findUnique({
             where: { id },
-            include: includeDoctorFullProfile,
+            include: {
+                profile: {
+                    select: {
+                        name: true,
+                        profileColor: true,
+                        profileImage: true,
+                        profilePublicId: true,
+                    },
+                }
+            },
         });
 
         if (!doctor) {
@@ -69,30 +46,11 @@ export const GET = async (req, { params }) => {
         // Format doctor object without password
         const formattedDoctorObj = getUserWithoutPassword(doctor);
 
-        // Fetch booked slots
-        const { success, bookedSlots, error } = await getDoctorBookedSlots(id);
-
-        if (!success) {
-            return NextResponse.json({
-                status: 500,
-                error: error.message || "Failed to fetch booked slots",
-            });
-        }
-
-        // Check if bookedSlots is valid and not null
-        if (!bookedSlots || Object.keys(bookedSlots).length === 0) {
-            return NextResponse.json({
-                status: 404,
-                error:
-                    "No booked slots found for the doctor in the specified date range",
-            });
-        }
-
         // Return the doctor data and weekly schedule
         return NextResponse.json({
             status: 200,
             doctor: formattedDoctorObj,
-            weeklySchedule: bookedSlots,
+            weeklySchedule: availableSlots,
         });
     } catch (error) {
         return NextResponse.json({
@@ -101,7 +59,6 @@ export const GET = async (req, { params }) => {
         });
     }
 };
-
 export const POST = async (req, { params }) => {
     try {
         const id = getIdFromParams(params);
@@ -110,7 +67,6 @@ export const POST = async (req, { params }) => {
             name,
             specialty,
             degree,
-            password,
             experience,
             fee,
             about,
@@ -129,11 +85,7 @@ export const POST = async (req, { params }) => {
             addresses: addresses || undefined,
         };
 
-        if (password) {
-            updateData.password = await bcrypt.hash(password, 10);
-        }
-
-        const doctor = await prisma.doctor.update({
+        const doctor = await prisma.doctors.update({
             where: { id },
             data: updateData,
         });
@@ -148,7 +100,7 @@ export const POST = async (req, { params }) => {
 export const DELETE = async (req, { params }) => {
     try {
         const id = getIdFromParams(params);
-        const doctor = await prisma.doctor.delete({
+        const doctor = await prisma.doctors.delete({
             where: { id },
         });
 

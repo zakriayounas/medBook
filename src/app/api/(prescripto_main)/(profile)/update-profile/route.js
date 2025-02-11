@@ -8,7 +8,7 @@ export const POST = async (req) => {
         const userId = extractUserId(req);
         const formData = await req.formData();
         const data = Object.fromEntries(formData.entries());
-        const { name, addresses, date_of_birth, gender } = data;
+        const { name, addresses, dateOfBirth, gender } = data;
 
         const file = formData.get("profileImage");
         let profileImage = null;
@@ -23,7 +23,7 @@ export const POST = async (req) => {
             }
             profileImage = uploadResult.secure_url;
             profilePublicId = uploadResult.public_id;
-            const existingUser = await prisma.user.findUnique({
+            const existingUser = await prisma.users.findUnique({
                 where: { id: userId },
             });
             if (existingUser && existingUser.profilePublicId) {
@@ -42,12 +42,12 @@ export const POST = async (req) => {
         const updatedUserData = {};
         if (name) updatedUserData.name = name;
         if (addresses) updatedUserData.addresses = addresses;
-        if (date_of_birth) updatedUserData.date_of_birth = date_of_birth;
+        if (dateOfBirth) updatedUserData.dateOfBirth = dateOfBirth;
         if (gender) updatedUserData.gender = gender;
         if (profileImage) updatedUserData.profileImage = profileImage;
         if (profilePublicId) updatedUserData.profilePublicId = profilePublicId;
 
-        const updatedUserProfile = await prisma.user.update({
+        const updatedUserProfile = await prisma.users.update({
             where: { id: userId },
             data: updatedUserData,
         });

@@ -1,48 +1,50 @@
 import { NextResponse } from "next/server";
+import { checkDoctorAvailability } from "../../../../../lib/doctorSchedule";
 import prisma from "../../../../../lib/prisma";
-import {
-    extractUserId,
-    validateAppointmentTime,
-} from "../../../../../lib/UserHelpers";
-import { convertToSQLDatetime } from "../../../../../utils/helpers";
-
-export const GET = async (req) => {
-    const { searchParams } = new URL(req.url);
-    const isUserAppointments = searchParams.get("user");
-
-    try {
-        const userId = extractUserId(req);
-
-        const appointments = await prisma.appointment.findMany({
-            where: isUserAppointments ? { patientId: userId } : {},
-            include: {
-                doctor: {
-                    select: {
-                        fee: true,
-                        ...(isUserAppointments && { addresses: true }),
-                        ...(isUserAppointments && { specialty: true }),
-                        profile: {
-                            select: {
-                                name: true,
-                                profileColor: true,
-                                profileImage: true,
-                            },
-                        },
-                    },
-                },
-                ...(!isUserAppointments && {
-                    patient: {
+import { extractUserId, getQueryFilters } from "../../../../../lib/UserHelpers";
+import { validateIsDoctorExists } from "../../../../../lib/doctorHelper";
+import { formatToLocalISOString } from "../../../../../utils/helpers";
+const fieldsIncludeObj = (userRole) => {
+    return {
+        ...(userRole !== "DOCTOR" && {
+            doctor: {
+                select: {
+                    fee: true,
+                    ...(userRole === "PATIENT" && { addresses: true }),
+                    ...(userRole === "PATIENT" && { specialty: true }),
+                    profile: {
                         select: {
                             name: true,
                             profileColor: true,
                             profileImage: true,
                         },
                     },
-                }),
+                },
             },
-            orderBy: {
-                id: 'desc',
+        }),
+        ...(userRole !== "PATIENT" && {
+            patient: {
+                select: {
+                    name: true,
+                    profileColor: true,
+                    profileImage: true,
+                },
             },
+        }),
+    };
+};
+
+export const GET = async (req) => {
+    const { whereClause, limitRecords, skipRecords, orderBy, userRole } =
+        getQueryFilters(req);
+
+    try {
+        const appointments = await prisma.appointments.findMany({
+            where: whereClause,
+            include: fieldsIncludeObj(userRole),
+            orderBy,
+            skip: skipRecords,
+            take: limitRecords,
         });
 
         return NextResponse.json({ status: 200, appointments });
@@ -52,46 +54,56 @@ export const GET = async (req) => {
 };
 
 export const POST = async (req) => {
-
     try {
         const userId = extractUserId(req);
-        const { appointment_date, appointment_time, doctorId } = await req.json();
-
-        if (!appointment_date || !appointment_time || !doctorId) {
+        const { appointmentDate, doctorId } = await req.json();
+        if (!appointmentDate || !doctorId) {
             return NextResponse.json(
                 {
                     status: 400,
-                    error:
-                        "appointment_date, appointment_time, and doctorId are required",
+                    error: "appointmentDate and doctorId are required",
                 },
                 { status: 400 }
             );
         }
 
-        const validationResult = await validateAppointmentTime(
-            appointment_date,
-            appointment_time,
-            doctorId
-        );
-        if (!validationResult.success) {
+        const { exists } = await validateIsDoctorExists({ id: doctorId });
+        if (!exists) {
             return NextResponse.json(
-                { status: 400, error: validationResult.error },
+                {
+                    status: 404,
+                    error: "Doctor not found",
+                },
+                { status: 404 }
+            );
+        }
+        const formattedDate = formatToLocalISOString(appointmentDate);
+        const isSlotAvailable = await checkDoctorAvailability(
+            doctorId,
+            formattedDate
+        );
+        if (!isSlotAvailable) {
+            return NextResponse.json(
+                {
+                    status: 400,
+                    error: "The selected time slot is not available for the doctor.",
+                },
                 { status: 400 }
             );
         }
-        const formattedDateTime = convertToSQLDatetime(appointment_date, appointment_time);
-
-        const appointmentDate = new Date(formattedDateTime);
-
-        const appointment = await prisma.appointment.create({
+        const appointment = await prisma.appointments.create({
             data: {
-                appointment_date: appointmentDate,
-                appointment_time,
+                appointmentDate: new Date(formattedDate),
                 doctorId,
                 patientId: userId,
             },
         });
-        return NextResponse.json({ status: 200, appointment, message: "Appointment booked successfully!" });
+
+        return NextResponse.json({
+            status: 200,
+            appointment,
+            message: "Appointment booked successfully!",
+        });
     } catch (error) {
         return NextResponse.json({ status: 500, error: error.message });
     }
