@@ -18,7 +18,7 @@ export async function POST(req) {
 
         if (!newUserResponse.success) {
             return NextResponse.json(
-                { success: false, error: newUserResponse.error },
+                { success: false, message: newUserResponse.error },
                 { status: 400 }
             );
         }
@@ -35,7 +35,7 @@ export async function POST(req) {
         );
     } catch (error) {
         return NextResponse.json(
-            { success: false, error: error.message },
+            { success: false, message: error.message || "Internal server error" },
             { status: 500 }
         );
     }

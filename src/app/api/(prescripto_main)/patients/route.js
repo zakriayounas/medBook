@@ -19,6 +19,6 @@ export const GET = async (req) => {
         patients = patients.map(pt => getUserWithoutPassword(pt));
         return NextResponse.json({ status: 200, patients });
     } catch (error) {
-        return NextResponse.json({ status: 500, error: error.message });
+        return NextResponse.json({ status: 500, message: error.message || "Internal server error" });
     }
 };

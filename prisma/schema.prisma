@@ -31,7 +31,7 @@ model Doctors {
   degree          String
   experience      Int
   fee             Int
-  about           String?
+  about           String?           @db.Text
   isActive        Boolean           @default(true)
   profile         Users             @relation(fields: [userId], references: [id])
   addresses       Json

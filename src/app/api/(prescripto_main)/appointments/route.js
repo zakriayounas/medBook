@@ -49,7 +49,7 @@ export const GET = async (req) => {
 
         return NextResponse.json({ status: 200, appointments });
     } catch (error) {
-        return NextResponse.json({ status: 500, error: error.message });
+        return NextResponse.json({ status: 500, message: error.message || "Internal server error" });
     }
 };
 
@@ -105,6 +105,6 @@ export const POST = async (req) => {
             message: "Appointment booked successfully!",
         });
     } catch (error) {
-        return NextResponse.json({ status: 500, error: error.message });
+        return NextResponse.json({ status: 500, message: error.message || "Internal server error" });
     }
 };

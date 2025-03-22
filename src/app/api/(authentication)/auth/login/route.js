@@ -10,28 +10,26 @@ export async function POST(req) {
 
         if (!email || !password) {
             return NextResponse.json(
-                { success: false, error: 'Email and password are required' },
+                { success: false, message: 'Email and password are required' },
                 { status: 400 }
             );
         }
-        console.log(email, password, "kk")
         const user = await prisma.users.findUnique({ where: { email } });
         if (!user) {
             return NextResponse.json(
-                { success: false, error: 'User not found' },
+                { success: false, message: 'Invalid credentials' },
                 { status: 404 }
             );
         }
 
-
-        // const isPasswordValid = await bcrypt.compare(password, user.password);
-        // if (!isPasswordValid) {
-        //     return NextResponse.json(
-        //         { success: false, error: 'Invalid credentials' },
-        //         { status: 401 }
-        //     );
-        // }
-
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return NextResponse.json(
+                { success: false, message: 'Invalid credentials' },
+                { status: 401 }
+            );
+        }
+        console.log("password isValid ?", isPasswordValid)
         const token = jwt.sign(
             { userId: user.id, email: user.email },
             process.env.JWT_SECRET_KEY
@@ -47,7 +45,7 @@ export async function POST(req) {
         );
     } catch (error) {
         return NextResponse.json(
-            { success: false, error: error.message },
+            { success: false, message: error.message || "Internal server error" },
             { status: 500 }
         );
     }

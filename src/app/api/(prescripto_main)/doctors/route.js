@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import prisma from "../../../../../lib/prisma";
 import { createUser, getQueryFilters } from "../../../../../lib/UserHelpers";
 import { validateRequiredFields } from "../../../../../lib/validator";
-import { validateIsDoctorExists } from "../../../../../lib/doctorHelper";
-import { addDefaultSchedule } from "../../../../../lib/doctorSchedule";
 
 export const GET = async (req) => {
     const { whereClause, limitRecords, skipRecords, orderBy } = getQueryFilters(req)
@@ -85,13 +83,6 @@ export const POST = async (req) => {
         if (!newUser.success) {
             return NextResponse.json({ message: newUser.error, status: 400 });
         }
-        const { exists } = await validateIsDoctorExists({ userId: newUser.user.id });
-        if (exists) {
-            return NextResponse.json({
-                error: "Doctor already exists with this email",
-                status: 400,
-            });
-        }
         // Create the doctor record
         const doctor = await prisma.doctors.create({
             data: {
@@ -115,7 +106,6 @@ export const POST = async (req) => {
                 },
             },
         });
-        await addDefaultSchedule(doctor.id);
         return NextResponse.json(
             {
                 doctor,
@@ -124,6 +114,6 @@ export const POST = async (req) => {
             { status: 200 }
         );
     } catch (error) {
-        return NextResponse.json({ message: error.message }, { status: 500 });
+        return NextResponse.json({ message: error.message || "Internal server error" }, { status: 500 });
     }
 };

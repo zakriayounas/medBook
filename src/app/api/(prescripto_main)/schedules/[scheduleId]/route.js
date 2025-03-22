@@ -52,7 +52,7 @@ export const POST = async (req, { params }) => {
     } catch (error) {
         console.error("Error updating schedule:", error.message);
         return NextResponse.json(
-            { success: false, error: error.message },
+            { success: false, message: error.message || "Internal server error" },
             { status: 500 }
         );
     }
@@ -89,7 +89,7 @@ export const DELETE = async (req, { params }) => {
         return NextResponse.json(
             {
                 success: false,
-                error: error.message,
+                message: error.message || "Internal server error",
             },
             { status: 500 }
         );
@@ -169,7 +169,7 @@ export const DELETE = async (req, { params }) => {
 //     } catch (error) {
 //         console.error("Error adding schedule:", error.message);
 //         return NextResponse.json(
-//             { success: false, error: error.message },
+//             { success: false, message: error.message || "Internal server error"  },
 //             { status: 500 }
 //         );
 //     }

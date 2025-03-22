@@ -15,7 +15,7 @@ export const GET = async (req, { params }) => {
         if (!success) {
             return NextResponse.json({
                 status: 500,
-                error: error.message || "Failed to fetch booked slots",
+                message: error.message || "Failed to fetch booked slots",
             });
         }
 
@@ -40,7 +40,7 @@ export const GET = async (req, { params }) => {
         });
 
         if (!doctor) {
-            return NextResponse.json({ status: 404, error: "Doctor not found" });
+            return NextResponse.json({ status: 404, message: "Doctor not found" });
         }
 
         // Format doctor object without password
@@ -55,7 +55,7 @@ export const GET = async (req, { params }) => {
     } catch (error) {
         return NextResponse.json({
             status: 500,
-            error: error.message || "An unexpected error occurred",
+            message: error.message || "An unexpected error occurred",
         });
     }
 };
@@ -93,7 +93,7 @@ export const POST = async (req, { params }) => {
         const formattedDoctorObj = getUserWithoutPassword(doctor);
         return NextResponse.json({ status: 200, doctor: formattedDoctorObj });
     } catch (error) {
-        return NextResponse.json({ status: 500, error: error.message });
+        return NextResponse.json({ status: 500, message: error.message || "Internal server error" });
     }
 };
 
@@ -105,7 +105,7 @@ export const DELETE = async (req, { params }) => {
         });
 
         if (!doctor) {
-            return NextResponse.json({ status: 404, error: "Doctor not found" });
+            return NextResponse.json({ status: 404, message: "Doctor not found" });
         }
 
         return NextResponse.json({
@@ -113,6 +113,6 @@ export const DELETE = async (req, { params }) => {
             message: "Doctor deleted successfully!",
         });
     } catch (error) {
-        return NextResponse.json({ status: 500, error: error.message });
+        return NextResponse.json({ status: 500, message: error.message || "Internal server error" });
     }
 };

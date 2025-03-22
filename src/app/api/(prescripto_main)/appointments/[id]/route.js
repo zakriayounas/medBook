@@ -14,6 +14,6 @@ export const POST = async (req, { params }) => {
         return NextResponse.json({ status: 200, message: "Appointment cancelled successfully!" });
     } catch (error) {
         console.error(error);
-        return NextResponse.json({ status: 500, error: error.message });
+        return NextResponse.json({ status: 500, message: error.message || "Internal server error" });
     }
 };
