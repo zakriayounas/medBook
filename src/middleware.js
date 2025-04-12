@@ -1,43 +1,55 @@
 import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
+const exemptedPaths = [
+    "/api/auth/login",
+    "/api/auth/signup",
+];
+
 export async function middleware(req) {
     const { pathname } = req.nextUrl;
 
-    // Allow public access to login & signup routes
-    if (pathname === "/api/auth/login" || pathname === "/api/auth/signup") {
+    // Handle CORS Preflight (OPTIONS) Requests
+    if (req.method === "OPTIONS") {
+        return new NextResponse(null, {
+            status: 204,
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            },
+        });
+    }
+
+    // Allow exempted paths to pass through
+    if (exemptedPaths.some((path) => pathname.startsWith(path))) {
         return NextResponse.next();
     }
 
-    // Require authentication for protected API routes
-    if (pathname.startsWith("/api")) {
-        const authHeader = req.headers.get("Authorization");
-        const token = authHeader?.split(" ")[1];
+    // Extract token from Authorization header
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.split(" ")[1]; // Expecting "Bearer <token>"
 
-        if (!token) {
-            return NextResponse.json(
-                { success: false, message: "Authentication required" },
-                { status: 401 }
-            );
-        }
-
-        try {
-            const { payload } = await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET_KEY));
-            const response = NextResponse.next();
-            response.headers.set("x-user-id", payload.userId); // Attach userId to the response
-            return response;
-        } catch (error) {
-            return NextResponse.json(
-                { success: false, message: "Invalid or expired token" },
-                { status: 403 }
-            );
-        }
+    if (!token) {
+        return NextResponse.json({ message: "Unauthorized - No token provided" }, { status: 401 });
     }
 
-    return NextResponse.next();
+    try {
+        const { payload } = await jwtVerify(
+            token,
+            new TextEncoder().encode(process.env.JWT_SECRET_KEY)
+        );
+
+        const response = NextResponse.next();
+        response.headers.set("x-user-id", payload.userId);
+        response.headers.set("Access-Control-Allow-Origin", "*");
+
+        return response;
+    } catch (err) {
+        return NextResponse.json({ message: "Unauthorized - Invalid token" }, { status: 401 });
+    }
 }
 
-// Middleware configuration (applies to all API routes)
 export const config = {
-    matcher: ["/api/:path*"],
+    matcher: "/api/:path*",
 };
