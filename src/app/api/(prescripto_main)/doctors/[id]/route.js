@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { generateAvailableSlots, getDoctorBookedSlots, getDoctorSchedules } from "../../../../../../lib/doctorSchedule";
 import prisma from "../../../../../../lib/prisma";
 import {
     getIdFromParams,
@@ -9,33 +8,12 @@ import {
 export const GET = async (req, { params }) => {
     try {
         const id = getIdFromParams(params);
-        const doctorSchedules = await getDoctorSchedules(id);
-        const { success, bookedTimes, error } = await getDoctorBookedSlots(id);
 
-        if (!success) {
-            return NextResponse.json({
-                status: 500,
-                message: error.message || "Failed to fetch booked slots",
-            });
-        }
-
-        // Generate available slots for the week
-        const availableSlots = await generateAvailableSlots(
-            doctorSchedules,
-            bookedTimes
-        );
-
+        // Fetch the main doctor
         const doctor = await prisma.doctors.findUnique({
             where: { id },
             include: {
-                profile: {
-                    select: {
-                        name: true,
-                        profileColor: true,
-                        profileImage: true,
-                        profilePublicId: true,
-                    },
-                }
+                profile: true
             },
         });
 
@@ -43,14 +21,28 @@ export const GET = async (req, { params }) => {
             return NextResponse.json({ status: 404, message: "Doctor not found" });
         }
 
+        // Extract specialty
+        const { specialty } = doctor;
+
+        // Fetch related doctors with the same specialty, excluding the current doctor
+        const relatedDoctors = await prisma.doctors.findMany({
+            where: {
+                specialty,
+                NOT: { id },
+            },
+            take: 6,
+            include: {
+                profile: true
+            },
+        });
+
         // Format doctor object without password
         const formattedDoctorObj = getUserWithoutPassword(doctor);
 
-        // Return the doctor data and weekly schedule
         return NextResponse.json({
             status: 200,
             doctor: formattedDoctorObj,
-            weeklySchedule: availableSlots,
+            related_doctors: relatedDoctors.map(getUserWithoutPassword),
         });
     } catch (error) {
         return NextResponse.json({
@@ -59,6 +51,7 @@ export const GET = async (req, { params }) => {
         });
     }
 };
+
 export const POST = async (req, { params }) => {
     try {
         const id = getIdFromParams(params);

@@ -8,18 +8,9 @@ export const GET = async (req) => {
     try {
         const doctors = await prisma.doctors.findMany({
             where: whereClause,
-            select: {
-                id: true,
-                specialty: true,
-                isActive: true,
-                profile: {
-                    select: {
-                        name: true,
-                        profileColor: true,
-                        profileImage: true,
-                        gender: true,
-                    },
-                },
+            include: {
+                profile: true
+
             },
             orderBy, // Sorting applied here
             skip: skipRecords, // Pagination skip
