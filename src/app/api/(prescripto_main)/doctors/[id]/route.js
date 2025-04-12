@@ -56,20 +56,41 @@ export const GET = async (req, { params }) => {
 
 export const POST = async (req, { params }) => {
     try {
-        const id = getIdFromParams(params);  // Extract doctor ID from params
-        const userId = extractUserId(req);  // Extract user ID from the request (assuming the doctor is a user too)
-
+        const id = getIdFromParams(params); // doctorId from URL params
         const formData = await req.formData();
         const data = Object.fromEntries(formData.entries());
 
-        // Extract fields from the form data
-        const { name, specialty, degree, experience, fee, about, isActive = true, addresses, dateOfBirth, gender } = data;
+        const {
+            name,
+            specialty,
+            degree,
+            experience,
+            fee,
+            about,
+            isActive = true,
+            addresses,
+            dateOfBirth,
+            gender,
+        } = data;
 
-        // Handle profile image upload if present
+        // Step 1: Check if doctor exists
+        const existingDoctor = await prisma.doctors.findUnique({
+            where: { id },
+        });
+
+        if (!existingDoctor) {
+            return NextResponse.json({ status: 404, message: "Doctor not found" });
+        }
+
+        // Step 2: Extract userId from doctor object
+        const userId = existingDoctor.userId;
+
+        // Step 3: Handle profile image upload if provided
         let updatedProfileImage = null;
         let updatedProfilePublicId = null;
+
         const file = formData.get("profileImage");
-        if (file) {
+        if (file && file.name) {
             const uploadResult = await handleFileUpload(file);
             if (!uploadResult.success) {
                 return NextResponse.json({
@@ -77,16 +98,15 @@ export const POST = async (req, { params }) => {
                     status: 500,
                 });
             }
+
             updatedProfileImage = uploadResult.secure_url;
             updatedProfilePublicId = uploadResult.public_id;
 
-            // Find the existing user (doctor is also a user)
             const existingUser = await prisma.users.findUnique({
                 where: { id: userId },
             });
 
-            // If the user has an existing profile image, delete it before uploading the new one
-            if (existingUser && existingUser.profilePublicId) {
+            if (existingUser?.profilePublicId) {
                 const deleteResult = await handleFileDelete(existingUser.profilePublicId);
                 if (!deleteResult.success) {
                     return NextResponse.json({
@@ -96,48 +116,47 @@ export const POST = async (req, { params }) => {
                 }
             }
         }
-
-        // Prepare the update data for the doctor record
-        const updateData = {
+        // Step 4: Prepare doctor update data
+        const doctorUpdateData = {
             specialty: specialty || undefined,
             degree: degree || undefined,
-            experience: experience || undefined,
-            fee: fee || undefined,
+            experience: parseInt(experience) || undefined,
+            fee: parseInt(fee) || undefined,
             about: about || undefined,
-            isActive: isActive || undefined,
+            isActive: Boolean(isActive) || undefined,
             addresses: addresses || undefined,
         };
 
-        // If profile image or public ID is provided, include it in the doctor update data
-        if (updatedProfileImage || updatedProfilePublicId) {
-            updateData.profileImage = updatedProfileImage;
-            updateData.profilePublicId = updatedProfilePublicId;
-        }
-
-        // Update the doctor data
-        const doctor = await prisma.doctors.update({
+        // Step 5: Update doctor
+        const updatedDoctor = await prisma.doctors.update({
             where: { id },
-            data: updateData,
+            data: doctorUpdateData,
         });
 
-        // Update the user table as well if any user-specific fields (like profile image) have changed
-        const updatedUserProfile = await prisma.users.update({
+        // Step 6: Prepare user update data
+        const userUpdateData = {
+            name: name || undefined,
+            dateOfBirth: dateOfBirth || undefined,
+            gender: gender || undefined,
+        };
+
+        if (updatedProfileImage) userUpdateData.profileImage = updatedProfileImage;
+        if (updatedProfilePublicId) userUpdateData.profilePublicId = updatedProfilePublicId;
+
+        const updatedUser = await prisma.users.update({
             where: { id: userId },
-            data: {
-                name: name || undefined,
-                dateOfBirth: dateOfBirth || undefined,
-                gender: gender || undefined,
-                profileImage: updatedProfileImage || undefined,
-                profilePublicId: updatedProfilePublicId || undefined,
-            },
+            data: userUpdateData,
         });
 
-        // Return the updated doctor profile (without password)
-        const formattedDoctorObj = getUserWithoutPassword(doctor);
-        return NextResponse.json({ status: 200, doctor: formattedDoctorObj, user: updatedUserProfile });
+        // Final: return cleaned result
+        return NextResponse.json({
+            status: 200,
+            doctor: updatedDoctor,
+            user: getUserWithoutPassword(updatedUser),
+        });
 
     } catch (error) {
-        console.error(error);
+        console.log(error);
         return NextResponse.json({ status: 500, message: error.message || "Internal server error" });
     }
 };
