@@ -136,7 +136,7 @@ export const POST = async (req, { params }) => {
         // Step 6: Prepare user update data
         const userUpdateData = {
             name: name || undefined,
-            dateOfBirth: dateOfBirth || undefined,
+            dateOfBirth: new Date(dateOfBirth) || undefined,
             gender: gender || undefined,
         };
 
