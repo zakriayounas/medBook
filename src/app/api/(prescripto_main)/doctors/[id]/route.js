@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
+import { handleFileDelete, handleFileUpload } from "../../../../../../lib/fileHandler";
 import prisma from "../../../../../../lib/prisma";
 import {
-    extractUserId,
     getIdFromParams,
-    getUserWithoutPassword,
+    getUserWithoutPassword
 } from "../../../../../../lib/UserHelpers";
-import { handleFileDelete, handleFileUpload } from "../../../../../../lib/fileHandler";
 // Example usage in your GET function
 export const GET = async (req, { params }) => {
     try {
@@ -38,13 +37,29 @@ export const GET = async (req, { params }) => {
             },
         });
 
-        // Format doctor object without password
-        const formattedDoctorObj = getUserWithoutPassword(doctor);
+        // Retrieve current date and calculate date 7 days ahead
+        const currentDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(currentDate.getDate() + 7);
+
+        // Fetch appointments from the appointment table for the doctor for the next 7 days
+        const weeklyBookings = await prisma.appointments.findMany({
+            where: {
+                doctorId: id,
+                appointmentDate: {
+                    gte: currentDate, // appointments from now
+                    lt: endDate,      // until 7 days later (exclusive)
+                },
+            },
+            orderBy: { appointmentDate: 'asc' },
+        });
 
         return NextResponse.json({
             status: 200,
-            doctor: formattedDoctorObj,
-            related_doctors: relatedDoctors.map(getUserWithoutPassword),
+            doctor,
+            related_doctors: relatedDoctors,
+            weeklyBookings
+
         });
     } catch (error) {
         return NextResponse.json({
