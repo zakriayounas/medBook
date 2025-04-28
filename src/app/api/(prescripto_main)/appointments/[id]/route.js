@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getIdFromParams } from "../../../../../../lib/UserHelpers";
+import prisma from "../../../../../../lib/prisma";
 
 export const POST = async (req, { params }) => {
     try {
