@@ -8,55 +8,74 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 export const POST = async (req) => {
     try {
         const userId = extractUserId(req);
-        const { appointmentId, feeAmount, paymentMethodId, stripeCustomerId } = await req.json();
-        if (!appointmentId || !feeAmount || !paymentMethodId || !stripeCustomerId) {
+        const { appointmentId } = await req.json();
+        if (!appointmentId) {
             return NextResponse.json(
-                {
-                    status: 400,
-                    error: "appointmentId, feeAmount,stripeCustomerId and paymentMethodId are required.",
-                },
+                { error: "appointmentId is required." },
                 { status: 400 }
             );
         }
-
-        // Create a PaymentIntent using the selected payment method
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(feeAmount * 100),
-            currency: "usd",
-            customer: stripeCustomerId,
-            payment_method: paymentMethodId,
-            confirm: true, // Directly attempt to confirm the payment
-            metadata: {
-                appointmentId: String(appointmentId),
-                userId: String(userId),
-            },
-            automatic_payment_methods: {
-                enabled: true,
-                allow_redirects: "never",
+        const appointment = await prisma.appointments.findUnique({
+            where: { id: parseInt(appointmentId, 10) },
+            select: {
+                appointmentDate: true,
+                doctor: {
+                    select: {
+                        specialty: true,
+                        fee: true,
+                        profile: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                    },
+                },
             },
         });
+        const { doctor, appointmentDate } = appointment
+        const { specialty, fee, profile } = doctor
+        const { name } = profile
 
-        // Save the transaction in DB
-        const transaction = await prisma.transaction.create({
-            data: {
-                appointmentId: parseInt(appointmentId),
-                userId,
-                stripePaymentIntentId: paymentIntent.id,
-                amount: feeAmount,
-                status: paymentIntent.status,
+        const formattedDate = new Date(appointmentDate).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
+
+
+        const session = await stripe.checkout.sessions.create({
+            mode: "payment",
+            line_items: [
+                {
+                    price_data: {
+                        currency: "usd",
+                        unit_amount: Math.round(fee * 100),
+                        product_data: {
+                            name: process.env.APP_NAME
+                                || "Medify", // Replace with your actual app name
+                            description: `Consultation with ${name} (${specialty}) on ${formattedDate}`,
+                        },
+                    },
+                    quantity: 1,
+                },
+            ],
+            success_url: `${process.env.FRONTEND_URL}/payment-verify?appointmentId=${appointmentId}`,
+            cancel_url: `${process.env.FRONTEND_URL}/payment-verify?cancel=true&appointmentId=${appointmentId}`,
+            metadata: {
+                userId: String(userId),
+                appointmentId: String(appointmentId),
             },
         });
 
         return NextResponse.json({
             status: 200,
-            message: "Payment successful!",
-            transaction,
+            url: session.url,
         });
     } catch (error) {
-        console.error("Transaction API Error:", error);
-
+        console.error("Create Checkout Session Error:", error);
         return NextResponse.json(
-            { status: 500, message: error.message || "Internal server error" },
+            { error: error.message || "Internal server error" },
             { status: 500 }
         );
     }

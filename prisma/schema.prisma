@@ -8,23 +8,21 @@ datasource db {
 }
 
 model Users {
-  id               Int            @id @default(autoincrement())
-  email            String         @unique
-  name             String
-  password         String
-  profileImage     String?
-  profilePublicId  String?
-  profileColor     String
-  gender           Gender?
-  role             Role?
-  dateOfBirth      DateTime?
-  stripeCustomerId String?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  Appointment      Appointments[]
-  Doctor           Doctors?
-  Transaction      Transaction[]
-  customerCards    CustomerCard[]
+  id              Int            @id @default(autoincrement())
+  email           String         @unique
+  name            String
+  password        String
+  profileImage    String?
+  profilePublicId String?
+  profileColor    String
+  gender          Gender?
+  role            Role?
+  dateOfBirth     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  Appointment     Appointments[]
+  Doctor          Doctors?
+  Transaction     Transaction[]
 }
 
 model Doctors {
@@ -79,19 +77,6 @@ model Appointments {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   Transaction     Transaction[]
-}
-
-model CustomerCard {
-  id                    Int      @id @default(autoincrement())
-  userId                Int?
-  stripeCustomerId      String
-  stripePaymentMethodId String
-  brand                 String
-  last4                 String
-  isDefault             Boolean  @default(false)
-  createdAt             DateTime @default(now())
-
-  user Users? @relation(fields: [userId], references: [id])
 }
 
 model Transaction {
