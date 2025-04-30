@@ -4,6 +4,7 @@ import { jwtVerify } from 'jose';
 const exemptedPaths = [
     "/api/auth/login",
     "/api/auth/signup",
+    "/api/stripe-webhook"
 ];
 
 export async function middleware(req) {
