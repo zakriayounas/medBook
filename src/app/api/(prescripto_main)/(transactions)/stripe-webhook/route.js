@@ -1,23 +1,40 @@
+// app/api/stripe-webhook/route.js
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { headers } from "next/headers";
 import prisma from "../../../../../../lib/prisma";
+
+export const config = {
+    api: {
+        bodyParser: false, // Required to get raw body
+    },
+};
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-export const POST = async (req) => {
+export async function POST(req) {
+    // Get the raw body as a buffer
     const rawBody = await req.text();
-    const sig = req.headers.get("stripe-signature");
+
+    // Use headers() to read the signature
+    const headerList = headers();
+    const stripeSignature = headerList.get("stripe-signature");
+
+    if (!stripeSignature) {
+        return NextResponse.json({ error: "Missing stripe-signature header" }, { status: 400 });
+    }
 
     let event;
 
     try {
-        event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
+        event = stripe.webhooks.constructEvent(rawBody, stripeSignature, endpointSecret);
     } catch (err) {
         console.error("Webhook signature verification failed:", err.message);
         return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
+    // ✅ Handle the event
     if (event.type === "checkout.session.completed") {
         const session = event.data.object;
 
@@ -42,4 +59,4 @@ export const POST = async (req) => {
     }
 
     return NextResponse.json({ received: true });
-};
+}
