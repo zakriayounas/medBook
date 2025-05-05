@@ -183,7 +183,9 @@ export const DELETE = async (req, { params }) => {
         const doctor = await prisma.doctors.delete({
             where: { id },
         });
-
+        await prisma.users.delete({
+            where: { id: doctor.userId },
+        });
         if (!doctor) {
             return NextResponse.json({ status: 404, message: "Doctor not found" });
         }
