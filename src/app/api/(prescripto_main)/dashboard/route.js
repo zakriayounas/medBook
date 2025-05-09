@@ -63,9 +63,8 @@ const getPatientGenderCounts = (doctorId) => {
 };
 export const GET = async (req) => {
     try {
-        // const { userRole, userId } = extractLoggedUserDetail(req);
-        const userRole = "DOCTOR"
-        const userId = 20
+        const { userRole, userId } = extractLoggedUserDetail(req);
+
         const now = new Date();
 
         const doctorId = userRole === "DOCTOR" ? userId : undefined;
