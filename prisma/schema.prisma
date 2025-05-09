@@ -20,7 +20,7 @@ model Users {
   dateOfBirth     DateTime?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
-  Appointment     Appointments[]
+  appointments    Appointments[]
   Doctor          Doctors?
   Transaction     Transaction[]
 }

@@ -32,6 +32,7 @@ export const POST = async (req) => {
         const {
             name,
             email,
+            gender,
             specialty,
             degree,
             password,
@@ -44,6 +45,7 @@ export const POST = async (req) => {
 
         const validationError = validateRequiredFields({
             name,
+            gender,
             email,
             specialty,
             degree,
@@ -68,6 +70,7 @@ export const POST = async (req) => {
             email,
             file,
             isDoctor: true,
+            gender
         });
 
         // If user creation fails, return the error

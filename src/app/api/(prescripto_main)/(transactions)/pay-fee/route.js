@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { extractUserId } from "../../../../../../lib/UserHelpers";
+import { extractLoggedUserDetail } from "../../../../../../lib/UserHelpers";
 import prisma from "../../../../../../lib/prisma";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const POST = async (req) => {
     try {
-        const userId = extractUserId(req);
+        const { userId } = extractLoggedUserDetail(req);
         const { appointmentId } = await req.json();
         if (!appointmentId) {
             return NextResponse.json(

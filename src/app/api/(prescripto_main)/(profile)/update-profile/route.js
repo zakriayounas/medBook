@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { extractUserId, getUserWithoutPassword } from "../../../../../../lib/UserHelpers";
+import { extractLoggedUserDetail, getUserWithoutPassword } from "../../../../../../lib/UserHelpers";
 import { handleFileDelete, handleFileUpload } from "../../../../../../lib/fileHandler";
 import prisma from "../../../../../../lib/prisma";
 
 export const POST = async (req) => {
     try {
-        const userId = extractUserId(req);
+        const { userId } = extractLoggedUserDetail(req);
         const formData = await req.formData();
         const data = Object.fromEntries(formData.entries());
         const { name, addresses, dateOfBirth, gender } = data;

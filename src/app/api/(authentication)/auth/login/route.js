@@ -29,9 +29,8 @@ export async function POST(req) {
                 { status: 401 }
             );
         }
-        console.log("password isValid ?", isPasswordValid)
         const token = jwt.sign(
-            { userId: user.id, email: user.email },
+            { userId: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET_KEY
         );
 

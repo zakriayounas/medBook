@@ -8,12 +8,12 @@ export async function POST(req) {
     try {
         const formData = await req.formData();
         const data = Object.fromEntries(formData.entries());
-        const { email, password, name, confirm_password } = data;
+        const { email, password, name, confirm_password, gender } = data;
         const newUserResponse = await createUser({
             email,
             password,
             name,
-            confirm_password,
+            confirm_password, gender
         });
 
         if (!newUserResponse.success) {

@@ -43,6 +43,8 @@ export async function middleware(req) {
 
         const response = NextResponse.next();
         response.headers.set("x-user-id", payload.userId);
+        response.headers.set("x-role", payload.role);
+        response.headers.set("x-email", payload.email);
         response.headers.set("Access-Control-Allow-Origin", "*");
 
         return response;

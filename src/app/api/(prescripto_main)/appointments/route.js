@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { validateIsDoctorExists } from "../../../../../lib/doctorHelper";
 import { checkDoctorAvailability } from "../../../../../lib/doctorSchedule";
 import prisma from "../../../../../lib/prisma";
-import { extractUserId, getQueryFilters } from "../../../../../lib/UserHelpers";
+import { extractLoggedUserDetail, getQueryFilters } from "../../../../../lib/UserHelpers";
 const fieldsIncludeObj = (userRole) => {
     return {
         ...(userRole !== "DOCTOR" && {
@@ -54,7 +54,7 @@ export const GET = async (req) => {
 
 export const POST = async (req) => {
     try {
-        const userId = extractUserId(req);
+        const { userId } = extractLoggedUserDetail(req);
         const { appointmentDate, doctorId } = await req.json();
         if (!appointmentDate || !doctorId) {
             return NextResponse.json({
