@@ -61,23 +61,35 @@ const getPatientGenderCounts = (doctorId) => {
         _count: true,
     });
 };
+
+const getTotalPatients = (doctorId) => {
+    return prisma.users.count({
+        where: {
+            role: "PATIENT",
+            ...(doctorId && {
+                appointments: {
+                    some: { doctorId },
+                },
+            }),
+        },
+    });
+};
 export const GET = async (req) => {
     try {
-        const { userRole, userId } = extractLoggedUserDetail(req);
+        const { userRole, doctorId = undefined } = extractLoggedUserDetail(req);
 
         const now = new Date();
-
-        const doctorId = userRole === "DOCTOR" ? userId : undefined;
 
         const [
             latestAppointments,
             [totalAppointments, cancelledAppointments, completedAppointments, pendingAppointments],
-            paidAppointments,
+            paidAppointments, totalPatients,
             patientGenderData,
         ] = await Promise.all([
             getLatestAppointments(doctorId),
             getAppointmentStatusCounts(doctorId, now),
             getPaidAppointments(doctorId),
+            getTotalPatients(doctorId),
             getPatientGenderCounts(doctorId),
         ]);
 
@@ -88,11 +100,12 @@ export const GET = async (req) => {
             completedAppointments,
             pendingAppointments,
             paidAppointments,
+            totalPatients,
             patientGenderCounts: formatGenderCounts(patientGenderData),
         };
 
         if (userRole === "ADMIN") {
-            const [latestDoctors, latestPatients, totalPatients, totalDoctors, doctorGenderData] = await Promise.all([
+            const [latestDoctors, latestPatients, totalDoctors, doctorGenderData] = await Promise.all([
                 prisma.doctors.findMany({
                     take: 5,
                     orderBy: { createdAt: "desc" },
@@ -103,7 +116,6 @@ export const GET = async (req) => {
                     take: 5,
                     orderBy: { createdAt: "desc" },
                 }),
-                prisma.users.count({ where: { role: "PATIENT" } }),
                 prisma.users.count({ where: { role: "DOCTOR" } }),
                 prisma.users.groupBy({
                     by: ["gender"],
@@ -115,7 +127,6 @@ export const GET = async (req) => {
             Object.assign(data, {
                 latestDoctors,
                 latestPatients,
-                totalPatients,
                 totalDoctors,
                 doctorGenderCounts: formatGenderCounts(doctorGenderData),
             });

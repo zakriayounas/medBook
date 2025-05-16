@@ -29,16 +29,27 @@ export async function POST(req) {
                 { status: 401 }
             );
         }
+        let doctorId = null
+        if (user?.role === "DOCTOR") {
+            const doctor = await prisma.doctors.findFirst({
+                where: {
+                    userId: user?.id
+                },
+                select: {
+                    id: true
+                }
+            })
+            doctorId = doctor?.id
+        }
         const token = jwt.sign(
-            { userId: user.id, email: user.email, role: user.role },
+            { userId: user.id, email: user.email, role: user.role, doctorId: doctorId },
             process.env.JWT_SECRET_KEY
         );
-
         return NextResponse.json(
             {
                 success: true,
                 message: 'Login successful.',
-                user: getUserWithoutPassword(user),
+                user: getUserWithoutPassword({ ...user, doctorId }),
                 token
             }
         );
