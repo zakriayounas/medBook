@@ -36,7 +36,6 @@ const fieldsIncludeObj = (userRole) => {
 export const GET = async (req) => {
     const { whereClause, limitRecords, skipRecords, orderBy, userRole } =
         getQueryFilters(req);
-
     try {
         const appointments = await prisma.appointments.findMany({
             where: whereClause,
