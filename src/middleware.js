@@ -5,7 +5,6 @@ const exemptedPaths = [
     "/api/auth/login",
     "/api/auth/signup",
     "/api/stripe-webhook",
-    "/api/doctors"
 ];
 
 export async function middleware(req) {
