@@ -19,6 +19,7 @@ export const POST = async (req) => {
             where: { id: parseInt(appointmentId, 10) },
             select: {
                 appointmentDate: true,
+                isCancel: true,
                 doctor: {
                     select: {
                         specialty: true,
@@ -32,17 +33,39 @@ export const POST = async (req) => {
                 },
             },
         });
-        const { doctor, appointmentDate } = appointment
-        const { specialty, fee, profile } = doctor
-        const { name } = profile
-
-        const formattedDate = new Date(appointmentDate).toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
+        if (appointment.isCancel) {
+            return NextResponse.json(
+                { error: "This appointment has been cancelled." },
+                { status: 400 }
+            );
+        }
+        const existingTransaction = await prisma.transaction.findFirst({
+            where: {
+                appointmentId: parseInt(appointmentId, 10),
+            },
         });
 
+        if (existingTransaction) {
+            return NextResponse.json(
+                {
+                    error: "This appointment is already paid",
+                },
+                { status: 400 }
+            );
+        }
+        const { doctor, appointmentDate } = appointment;
+        const { specialty, fee, profile } = doctor;
+        const { name } = profile;
+
+        const formattedDate = new Date(appointmentDate).toLocaleDateString(
+            "en-US",
+            {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+            }
+        );
 
         const session = await stripe.checkout.sessions.create({
             mode: "payment",
@@ -52,8 +75,7 @@ export const POST = async (req) => {
                         currency: "usd",
                         unit_amount: Math.round(fee * 100),
                         product_data: {
-                            name: process.env.APP_NAME
-                                || "Medify", // Replace with your actual app name
+                            name: process.env.APP_NAME || "Medify", // Replace with your actual app name
                             description: `Consultation with ${name} (${specialty}) on ${formattedDate}`,
                         },
                     },
