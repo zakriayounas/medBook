@@ -22,7 +22,7 @@ model Users {
   updatedAt       DateTime       @updatedAt
   appointments    Appointments[]
   Doctor          Doctors?
-  Transaction     Transaction[]
+  transactions    Transaction[]
 }
 
 model Doctors {
@@ -76,7 +76,7 @@ model Appointments {
   isCancel        Boolean       @default(false)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  Transaction     Transaction[]
+  transactions    Transaction[]
 }
 
 model Transaction {

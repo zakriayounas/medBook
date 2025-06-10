@@ -30,6 +30,11 @@ const fieldsIncludeObj = (userRole) => {
                 },
             },
         }),
+        transactions: {
+            id: true,
+            status: true,
+            createdAt: true
+        }
     };
 };
 
@@ -44,8 +49,13 @@ export const GET = async (req) => {
             skip: skipRecords,
             take: limitRecords,
         });
-
-        return NextResponse.json({ status: 200, appointments });
+        const formattedAppointments = appointments.map(({ transactions, ...rest }) => {
+            return {
+                ...rest,
+                isPaid: transactions?.length > 0,
+            };
+        });
+        return NextResponse.json({ status: 200, appointments: formattedAppointments });
     } catch (error) {
         return NextResponse.json({ status: 500, message: error.message || "Internal server error" });
     }
