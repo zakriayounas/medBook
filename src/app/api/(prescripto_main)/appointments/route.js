@@ -31,9 +31,11 @@ const fieldsIncludeObj = (userRole) => {
             },
         }),
         transactions: {
-            id: true,
-            status: true,
-            createdAt: true
+            select: {
+                id: true,
+                status: true,
+                createdAt: true
+            }
         }
     };
 };
