@@ -19,7 +19,20 @@ export const GET = async (req) => {
             },
             include: {
                 user: userRole === "ADMIN" ? true : false,
-                appointment: true,
+                appointment: userRole === "DOCTOR" ? true : {
+                    include: {
+                        doctor: {
+                            select: {
+                                profile: {
+                                    select: {
+                                        name: true,
+                                    },
+                                },
+                                specialty: true,
+                            },
+                        },
+                    }
+                },
             },
         });
 
