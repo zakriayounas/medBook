@@ -41,7 +41,7 @@ export const POST = async (req) => {
 
         const updatedUserData = {};
         if (name) updatedUserData.name = name;
-        if (addresses) updatedUserData.addresses = addresses;
+        if (addresses) updatedUserData.addresses = JSON.parse(addresses);
         if (phone) updatedUserData.phone = phone;
         if (dateOfBirth) updatedUserData.dateOfBirth = new Date(dateOfBirth);
         if (gender) updatedUserData.gender = gender;
