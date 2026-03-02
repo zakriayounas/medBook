@@ -139,7 +139,6 @@ export const POST = async (req, { params }) => {
             fee: parseInt(fee) || undefined,
             about: about || undefined,
             isActive: Boolean(isActive) || undefined,
-            addresses: addresses || undefined,
         };
 
         // Step 5: Update doctor
@@ -153,6 +152,7 @@ export const POST = async (req, { params }) => {
             name: name || undefined,
             dateOfBirth: new Date(dateOfBirth) || undefined,
             gender: gender || undefined,
+            addresses: addresses ? JSON.parse(addresses) : undefined,
         };
 
         if (updatedProfileImage) userUpdateData.profileImage = updatedProfileImage;

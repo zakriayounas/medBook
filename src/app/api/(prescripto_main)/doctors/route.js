@@ -70,7 +70,8 @@ export const POST = async (req) => {
             email,
             file,
             isDoctor: true,
-            gender
+            gender,
+            addresses: addresses ? JSON.parse(addresses) : undefined,
         });
 
         // If user creation fails, return the error
@@ -86,7 +87,6 @@ export const POST = async (req) => {
                 fee: parseInt(fee),
                 about,
                 isActive: Boolean(isActive),
-                addresses,
                 userId: newUser.user.id, // Get the user ID from the successful user creation
             },
             include: {

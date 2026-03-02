@@ -8,7 +8,7 @@ export const POST = async (req) => {
         const { userId } = extractLoggedUserDetail(req);
         const formData = await req.formData();
         const data = Object.fromEntries(formData.entries());
-        const { name, addresses, dateOfBirth, gender } = data;
+        const { name, addresses, dateOfBirth, gender, phone } = data;
 
         const file = formData.get("profileImage");
         let profileImage = null;
@@ -42,6 +42,7 @@ export const POST = async (req) => {
         const updatedUserData = {};
         if (name) updatedUserData.name = name;
         if (addresses) updatedUserData.addresses = addresses;
+        if (phone) updatedUserData.phone = phone;
         if (dateOfBirth) updatedUserData.dateOfBirth = new Date(dateOfBirth);
         if (gender) updatedUserData.gender = gender;
         if (profileImage) updatedUserData.profileImage = profileImage;

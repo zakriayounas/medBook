@@ -9,13 +9,13 @@ const fieldsIncludeObj = (userRole) => {
             doctor: {
                 select: {
                     fee: true,
-                    ...(userRole === "PATIENT" && { addresses: true }),
                     ...(userRole === "PATIENT" && { specialty: true }),
                     profile: {
                         select: {
                             name: true,
                             profileColor: true,
                             profileImage: true,
+                            addresses: true,
                         },
                     },
                 },

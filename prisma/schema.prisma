@@ -16,6 +16,8 @@ model Users {
   profilePublicId String?
   profileColor    String
   gender          Gender?
+  addresses       Json?
+  phone           String?
   role            Role?
   dateOfBirth     DateTime?
   createdAt       DateTime       @default(now())
@@ -35,7 +37,6 @@ model Doctors {
   about           String?           @db.Text
   isActive        Boolean           @default(true)
   profile         Users             @relation(fields: [userId], references: [id])
-  addresses       Json
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   Appointment     Appointments[]
