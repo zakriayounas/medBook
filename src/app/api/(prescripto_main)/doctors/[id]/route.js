@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import { handleFileDelete, handleFileUpload } from "../../../../../../lib/fileHandler";
 import prisma from "../../../../../../lib/prisma";
 import {
+    extractLoggedUserDetail,
     getIdFromParams,
     getUserWithoutPassword
 } from "../../../../../../lib/UserHelpers";
+import { toBoolean } from "../../../../../../utils/helpers";
 // Example usage in your GET function
 export const GET = async (req, { params }) => {
     try {
@@ -70,6 +72,10 @@ export const GET = async (req, { params }) => {
 };
 
 export const POST = async (req, { params }) => {
+    const { userRole } = extractLoggedUserDetail(req);
+    if (userRole !== "ADMIN") {
+        return NextResponse.json({ status: 403, message: "Unauthorized: Only admins can update doctor information" });
+    }
     try {
         const id = getIdFromParams(params); // doctorId from URL params
         const formData = await req.formData();
@@ -86,8 +92,8 @@ export const POST = async (req, { params }) => {
             addresses,
             dateOfBirth,
             gender,
+            phone,
         } = data;
-
         // Step 1: Check if doctor exists
         const existingDoctor = await prisma.doctors.findUnique({
             where: { id },
@@ -138,7 +144,7 @@ export const POST = async (req, { params }) => {
             experience: parseInt(experience) || undefined,
             fee: parseInt(fee) || undefined,
             about: about || undefined,
-            isActive: Boolean(isActive) || undefined,
+            isActive: toBoolean(isActive),
         };
 
         // Step 5: Update doctor
@@ -150,9 +156,10 @@ export const POST = async (req, { params }) => {
         // Step 6: Prepare user update data
         const userUpdateData = {
             name: name || undefined,
-            dateOfBirth: new Date(dateOfBirth) || undefined,
+            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
             gender: gender || undefined,
             addresses: addresses ? JSON.parse(addresses) : undefined,
+            phone: phone || undefined,
         };
 
         if (updatedProfileImage) userUpdateData.profileImage = updatedProfileImage;

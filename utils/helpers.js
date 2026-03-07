@@ -64,3 +64,12 @@ export const formatToLocalISOString = (appointmentDate) => {
 
     return formattedDate;
 };
+
+
+export const toBoolean = (value) => {
+  if (value === true || value === "true") return true;
+  if (value === false || value === "false") return false;
+  if (value === 1 || value === "1") return true;
+  if (value === 0 || value === "0") return false;
+  return false;
+};
