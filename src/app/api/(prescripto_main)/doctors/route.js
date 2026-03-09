@@ -9,9 +9,12 @@ import { validateRequiredFields } from "../../../../../lib/validator";
 import { toBoolean } from "../../../../../utils/helpers";
 
 export const GET = async (req) => {
-  const { whereClause, limitRecords, skipRecords, orderBy } =
+  const { whereClause, limitRecords, skipRecords, orderBy, page } =
     getQueryFilters(req);
   try {
+     const total = await prisma.doctors.count({
+      where: whereClause,
+    });
     const doctors = await prisma.doctors.findMany({
       where: whereClause,
       include: {
@@ -22,7 +25,18 @@ export const GET = async (req) => {
       take: limitRecords, // Pagination limit
     });
 
-    return NextResponse.json({ status: 200, doctors });
+    const totalPages = Math.ceil(total / limitRecords);
+
+    return NextResponse.json({
+      status: 200,
+      doctors,
+      pagination: {
+        total,
+        pageSize: limitRecords,
+        currentPage: page,
+        totalPages,
+      },
+    });
   } catch (error) {
     return NextResponse.json({ status: 500, error: error.message });
   }
