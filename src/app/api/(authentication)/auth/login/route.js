@@ -14,7 +14,7 @@ export async function POST(req) {
                 { status: 400 }
             );
         }
-        const user = await prisma.users.findUnique({ where: { email } });
+        const user = await prisma.users.findUnique({ where: { email, deletedAt: null } });
         if (!user) {
             return NextResponse.json(
                 { success: false, message: 'Invalid credentials' },

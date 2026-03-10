@@ -100,7 +100,7 @@ export const POST = async (req) => {
       );
     }
 
-    const { exists } = await validateIsDoctorExists({ id: doctorId });
+    const { exists } = await validateIsDoctorExists({ id: doctorId, profile: { deletedAt: null }});
     if (!exists) {
       return NextResponse.json(
         {

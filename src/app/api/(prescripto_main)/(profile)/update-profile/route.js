@@ -24,7 +24,7 @@ export const POST = async (req) => {
             profileImage = uploadResult.secure_url;
             profilePublicId = uploadResult.public_id;
             const existingUser = await prisma.users.findUnique({
-                where: { id: userId },
+                where: { id: userId, deletedAt: null },
             });
             if (existingUser && existingUser.profilePublicId) {
                 const deleteResult = await handleFileDelete(
@@ -49,7 +49,7 @@ export const POST = async (req) => {
         if (profilePublicId) updatedUserData.profilePublicId = profilePublicId;
 
         const updatedUserProfile = await prisma.users.update({
-            where: { id: userId },
+            where: { id: userId, deletedAt: null },
             data: updatedUserData,
         });
         return NextResponse.json({

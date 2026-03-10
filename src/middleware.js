@@ -23,7 +23,7 @@ export async function middleware(req) {
     }
 
     // Allow exempted paths to pass through
-    if (exemptedPaths.some((path) => pathname.startsWith(path))) {
+    if (exemptedPaths.some((path) => pathname.startsWith(path)) || (req.method === "GET" && pathname === "/api/doctors")) {
         return NextResponse.next();
     }
 

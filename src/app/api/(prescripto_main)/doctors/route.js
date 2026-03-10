@@ -11,12 +11,19 @@ import { toBoolean } from "../../../../../utils/helpers";
 export const GET = async (req) => {
   const { whereClause, limitRecords, skipRecords, orderBy, page } =
     getQueryFilters(req);
+  const doctorsWhereClause = {
+    ...whereClause,
+    profile: {
+      ...(whereClause.profile || {}),
+      deletedAt: null,
+    },
+  };
   try {
-     const total = await prisma.doctors.count({
-      where: whereClause,
+    const total = await prisma.doctors.count({
+      where: doctorsWhereClause,
     });
     const doctors = await prisma.doctors.findMany({
-      where: whereClause,
+      where: doctorsWhereClause,
       include: {
         profile: true,
       },
@@ -111,10 +118,10 @@ export const POST = async (req) => {
         fee: parseInt(fee),
         about: about || undefined,
         isActive: toBoolean(isActive),
-        userId: newUser.user.id, 
+        userId: newUser.user.id,
       },
       include: {
-        profile: true
+        profile: true,
       },
     });
     return NextResponse.json(

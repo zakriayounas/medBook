@@ -343,104 +343,64 @@ ${name} is dedicated to helping patients restore movement, reduce pain, and retu
 //     await prisma.$disconnect();
 //   });
 
-// const { PrismaClient } = require("@prisma/client");
-// const prisma = new PrismaClient();
-
-// // Cities
-// const cities = [
-//   "Karachi",
-//   "Lahore",
-//   "Islamabad",
-//   "Rawalpindi",
-//   "Faisalabad",
-//   "Multan",
-//   "Peshawar",
-//   "Quetta",
-//   "Sialkot",
-//   "Hyderabad",
-// ];
-
-// // helper
-// function getRandom(arr) {
-//   return arr[Math.floor(Math.random() * arr.length)];
-// }
-
-// // address generator
-// function generateAddress() {
-//   return {
-//     line1: `Street ${Math.floor(Math.random() * 100) + 1}`,
-//     line2: `Block ${String.fromCharCode(65 + Math.floor(Math.random() * 6))}`,
-//     city: getRandom(cities),
-//     state: "Punjab",
-//     postalCode: String(30000 + Math.floor(Math.random() * 9999)),
-//     country: "Pakistan",
-//   };
-// }
-
-// async function main() {
-//   const doctors = await prisma.doctors.findMany();
-
-//   for (const doctor of doctors) {
-//     const user = await prisma.users.findUnique({
-//       where: { id: doctor.userId },
-//     });
-
-//     if (!user) continue;
-
-//     // generate two addresses
-//     const newAddresses = [generateAddress(), generateAddress()];
-
-//     await prisma.users.update({
-//       where: { id: user.id },
-//       data: {
-//         addresses: newAddresses, // if JSON column
-//       },
-//     });
-
-//     console.log(`✅ Updated: ${user.name}`);
-//   }
-
-//   console.log("🎉 All doctors updated with addresses!");
-// }
-
-// main()
-//   .catch(console.error)
-//   .finally(async () => {
-//     await prisma.$disconnect();
-//   });
-
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+// Cities
+const cities = [
+  "Karachi",
+  "Lahore",
+  "Islamabad",
+  "Rawalpindi",
+  "Faisalabad",
+  "Multan",
+  "Peshawar",
+  "Quetta",
+  "Sialkot",
+  "Hyderabad",
+];
+
+// helper
+function getRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// address generator
+function generateAddress() {
+  return {
+    line1: `Street ${Math.floor(Math.random() * 100) + 1}`,
+    line2: `Block ${String.fromCharCode(65 + Math.floor(Math.random() * 6))}`,
+    city: getRandom(cities),
+    state: "Punjab",
+    postalCode: String(30000 + Math.floor(Math.random() * 9999)),
+    country: "Pakistan",
+  };
+}
+
 async function main() {
-  const doctors = await prisma.doctors.findMany({
-    select: {
-      id: true,
-      specialty: true,
-      profile: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  });
+  const doctors = await prisma.doctors.findMany();
 
   for (const doctor of doctors) {
-    const { id, specialty, profile } = doctor
-    const about =
-      aboutTexts[specialty]?.(profile?.name) ||
-      `Dr. ${profile?.name} is a skilled doctor providing exceptional care.`;
-    await prisma.doctors.update({
-      where: { id },
+    const user = await prisma.users.findUnique({
+      where: { id: doctor.userId },
+    });
+
+    if (!user) continue;
+
+    // generate two addresses
+    const newAddresses = [generateAddress(), generateAddress()];
+
+    await prisma.users.update({
+      where: { id: user.id },
       data: {
-        about,
+        addresses: newAddresses, // if JSON column
       },
     });
 
-    console.log(`✅ Updated: ${profile?.name}`);
+    console.log(`✅ Updated: ${user.name}`);
   }
 
-  console.log("🎉 All doctors updated with about!");
+  console.log("🎉 All doctors updated with addresses!");
 }
 
 main()
@@ -448,3 +408,43 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
+// const { PrismaClient } = require("@prisma/client");
+// const prisma = new PrismaClient();
+
+// async function main() {
+//   const doctors = await prisma.doctors.findMany({
+//     select: {
+//       id: true,
+//       specialty: true,
+//       profile: {
+//         select: {
+//           name: true,
+//         },
+//       },
+//     },
+//   });
+
+//   for (const doctor of doctors) {
+//     const { id, specialty, profile } = doctor
+//     const about =
+//       aboutTexts[specialty]?.(profile?.name) ||
+//       `Dr. ${profile?.name} is a skilled doctor providing exceptional care.`;
+//     await prisma.doctors.update({
+//       where: { id },
+//       data: {
+//         about,
+//       },
+//     });
+
+//     console.log(`✅ Updated: ${profile?.name}`);
+//   }
+
+//   console.log("🎉 All doctors updated with about!");
+// }
+
+// main()
+//   .catch(console.error)
+//   .finally(async () => {
+//     await prisma.$disconnect();
+//   });

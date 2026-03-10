@@ -20,10 +20,11 @@ model Users {
   phone           String?
   role            Role?
   dateOfBirth     DateTime?
+  deletedAt       DateTime?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   appointments    Appointments[]
-  Doctor          Doctors?
+  doctor          Doctors?
   transactions    Transaction[]
 }
 

@@ -6,7 +6,7 @@ export const GET = async (req) => {
     try {
         const { userId } = extractLoggedUserDetail(req);
         const existingUser = await prisma.users.findUnique({
-            where: { id: userId },
+            where: { id: userId, deletedAt: null },
         });
 
         return NextResponse.json({
