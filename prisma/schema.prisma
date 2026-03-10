@@ -8,8 +8,8 @@ datasource db {
 }
 
 model Users {
-  id              Int            @id @default(autoincrement())
-  email           String         @unique
+  id              Int             @id @default(autoincrement())
+  email           String          @unique
   name            String
   password        String
   profileImage    String?
@@ -21,11 +21,12 @@ model Users {
   role            Role?
   dateOfBirth     DateTime?
   deletedAt       DateTime?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
   appointments    Appointments[]
   doctor          Doctors?
   transactions    Transaction[]
+  reviews         DoctorReviews[]
 }
 
 model Doctors {
@@ -37,35 +38,14 @@ model Doctors {
   fee             Int
   about           String?           @db.Text
   isActive        Boolean           @default(true)
+  ratingAverage   Float             @default(0)
+  totalReviews    Int               @default(0)
   profile         Users             @relation(fields: [userId], references: [id])
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   Appointment     Appointments[]
   DoctorSchedules DoctorSchedules[]
-}
-
-enum Role {
-  ADMIN
-  DOCTOR
-  PATIENT
-}
-
-enum Gender {
-  MALE
-  FEMALE
-  OTHERS
-}
-
-enum Specialty {
-  GeneralPhysician
-  Gynecologist
-  Dermatologist
-  Pediatrician
-  Neurologist
-  Gastroenterologist
-  Psychologist
-  Cardiologist
-  OrthopedicSurgeon
+  reviews         DoctorReviews[]
 }
 
 model Appointments {
@@ -76,9 +56,25 @@ model Appointments {
   doctorId        Int
   doctor          Doctors       @relation(fields: [doctorId], references: [id])
   isCancel        Boolean       @default(false)
+  isCompleted     Boolean       @default(false)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   transactions    Transaction[]
+}
+
+model DoctorReviews {
+  id            String   @id @default(uuid())
+  doctorId      Int
+  patientId     Int
+  appointmentId Int
+  comment       String?  @db.Text
+  rating        Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  doctor        Doctors  @relation(fields: [doctorId], references: [id])
+  patient       Users    @relation(fields: [patientId], references: [id])
+
+  @@unique([patientId, appointmentId])
 }
 
 model Transaction {
@@ -104,6 +100,30 @@ model DoctorSchedules {
   endTime    String
 
   doctor Doctors @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  ADMIN
+  DOCTOR
+  PATIENT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHERS
+}
+
+enum Specialty {
+  GeneralPhysician
+  Gynecologist
+  Dermatologist
+  Pediatrician
+  Neurologist
+  Gastroenterologist
+  Psychologist
+  Cardiologist
+  OrthopedicSurgeon
 }
 
 enum DayOfWeek {

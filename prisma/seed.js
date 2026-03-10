@@ -343,71 +343,71 @@ ${name} is dedicated to helping patients restore movement, reduce pain, and retu
 //     await prisma.$disconnect();
 //   });
 
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+// const { PrismaClient } = require("@prisma/client");
+// const prisma = new PrismaClient();
 
-// Cities
-const cities = [
-  "Karachi",
-  "Lahore",
-  "Islamabad",
-  "Rawalpindi",
-  "Faisalabad",
-  "Multan",
-  "Peshawar",
-  "Quetta",
-  "Sialkot",
-  "Hyderabad",
-];
+// // Cities
+// const cities = [
+//   "Karachi",
+//   "Lahore",
+//   "Islamabad",
+//   "Rawalpindi",
+//   "Faisalabad",
+//   "Multan",
+//   "Peshawar",
+//   "Quetta",
+//   "Sialkot",
+//   "Hyderabad",
+// ];
 
-// helper
-function getRandom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+// // helper
+// function getRandom(arr) {
+//   return arr[Math.floor(Math.random() * arr.length)];
+// }
 
-// address generator
-function generateAddress() {
-  return {
-    line1: `Street ${Math.floor(Math.random() * 100) + 1}`,
-    line2: `Block ${String.fromCharCode(65 + Math.floor(Math.random() * 6))}`,
-    city: getRandom(cities),
-    state: "Punjab",
-    postalCode: String(30000 + Math.floor(Math.random() * 9999)),
-    country: "Pakistan",
-  };
-}
+// // address generator
+// function generateAddress() {
+//   return {
+//     line1: `Street ${Math.floor(Math.random() * 100) + 1}`,
+//     line2: `Block ${String.fromCharCode(65 + Math.floor(Math.random() * 6))}`,
+//     city: getRandom(cities),
+//     state: "Punjab",
+//     postalCode: String(30000 + Math.floor(Math.random() * 9999)),
+//     country: "Pakistan",
+//   };
+// }
 
-async function main() {
-  const doctors = await prisma.doctors.findMany();
+// async function main() {
+//   const doctors = await prisma.doctors.findMany();
 
-  for (const doctor of doctors) {
-    const user = await prisma.users.findUnique({
-      where: { id: doctor.userId },
-    });
+//   for (const doctor of doctors) {
+//     const user = await prisma.users.findUnique({
+//       where: { id: doctor.userId },
+//     });
 
-    if (!user) continue;
+//     if (!user) continue;
 
-    // generate two addresses
-    const newAddresses = [generateAddress(), generateAddress()];
+//     // generate two addresses
+//     const newAddresses = [generateAddress(), generateAddress()];
 
-    await prisma.users.update({
-      where: { id: user.id },
-      data: {
-        addresses: newAddresses, // if JSON column
-      },
-    });
+//     await prisma.users.update({
+//       where: { id: user.id },
+//       data: {
+//         addresses: newAddresses, // if JSON column
+//       },
+//     });
 
-    console.log(`✅ Updated: ${user.name}`);
-  }
+//     console.log(`✅ Updated: ${user.name}`);
+//   }
 
-  console.log("🎉 All doctors updated with addresses!");
-}
+//   console.log("🎉 All doctors updated with addresses!");
+// }
 
-main()
-  .catch(console.error)
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// main()
+//   .catch(console.error)
+//   .finally(async () => {
+//     await prisma.$disconnect();
+//   });
 
 // const { PrismaClient } = require("@prisma/client");
 // const prisma = new PrismaClient();
@@ -448,3 +448,42 @@ main()
 //   .finally(async () => {
 //     await prisma.$disconnect();
 //   });
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
+
+const reviewMessages = [
+  "The consultation was very thorough and professional. Every concern I had was carefully listened to, and each step of the treatment plan was clearly explained. The staff were friendly and supportive, making the whole experience comfortable and reassuring from start to finish.",
+  "I had a very positive experience during my appointment. The doctor was attentive, patient, and genuinely cared about my health. All my questions were answered thoroughly, and I left feeling confident about the care I received. The clinic was clean, organized, and the staff were extremely helpful.",
+  "The appointment was excellent. I felt heard and supported throughout the visit. Each explanation about my condition and the treatment options was detailed and easy to understand. The follow-up care and guidance provided by the staff added to the reassuring and professional experience.",
+  "The consultation was compassionate and informative. All concerns were addressed carefully, and every aspect of the treatment plan was explained in detail. I felt completely comfortable asking questions and received guidance that made me confident about my next steps and ongoing care.",
+  "The experience was exceptional. The consultation felt personalized and focused entirely on my needs. I left the clinic feeling informed, supported, and confident in the recommended treatment plan. The staff made scheduling and follow-up straightforward, contributing to a smooth and professional experience.",
+  "The visit exceeded expectations. Each part of the appointment was handled with care and attention. Explanations were clear, and all questions were answered patiently. I felt reassured throughout the visit and confident in the treatment recommendations provided, with staff support making the process seamless.",
+  "The consultation was very detailed and informative. Every question was answered with patience, and all concerns were addressed thoroughly. The staff were helpful and organized, making the experience smooth. I left feeling well-informed, confident in the treatment plan, and cared for throughout the entire visit.",
+  "I felt very comfortable during the entire consultation. The explanations were clear and easy to understand, and all my health concerns were taken seriously. The staff were professional and attentive, ensuring that the appointment ran smoothly and that all follow-up instructions were provided clearly.",
+  "The appointment was well-organized and thorough. Each aspect of my concerns was discussed in detail, and the treatment plan was explained carefully. I felt listened to and supported throughout. The staff handled every step efficiently, making the experience professional, reassuring, and stress-free.",
+  "The consultation provided detailed explanations and guidance. Every question was addressed with patience, and the plan of care was clear and easy to follow. The staff were courteous and helpful, creating a smooth experience that left me feeling confident and reassured about my health and the next steps.",
+];
+
+async function main() {
+  const reviews = await prisma.doctorReviews.findMany();
+  let i = 0;
+
+  for (const review of reviews) {
+    // Loop messages cyclically if there are more reviews than messages
+    const message = reviewMessages[i % reviewMessages.length];
+
+    await prisma.doctorReviews.update({
+      where: { id: review.id },
+      data: { comment: message },
+    });
+
+    console.log(`✅ Updated review ID: ${review.id}`);
+    i++;
+  }
+}
+
+main()
+  .catch(console.error)
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
