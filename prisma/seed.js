@@ -448,38 +448,421 @@ ${name} is dedicated to helping patients restore movement, reduce pain, and retu
 //   .finally(async () => {
 //     await prisma.$disconnect();
 //   });
+
+
+// const { PrismaClient } = require("@prisma/client");
+// const prisma = new PrismaClient();
+
+// const reviewMessages = [
+//   "The consultation was very thorough and professional. Every concern I had was carefully listened to, and each step of the treatment plan was clearly explained. The staff were friendly and supportive, making the whole experience comfortable and reassuring from start to finish.",
+//   "I had a very positive experience during my appointment. The doctor was attentive, patient, and genuinely cared about my health. All my questions were answered thoroughly, and I left feeling confident about the care I received. The clinic was clean, organized, and the staff were extremely helpful.",
+//   "The appointment was excellent. I felt heard and supported throughout the visit. Each explanation about my condition and the treatment options was detailed and easy to understand. The follow-up care and guidance provided by the staff added to the reassuring and professional experience.",
+//   "The consultation was compassionate and informative. All concerns were addressed carefully, and every aspect of the treatment plan was explained in detail. I felt completely comfortable asking questions and received guidance that made me confident about my next steps and ongoing care.",
+//   "The experience was exceptional. The consultation felt personalized and focused entirely on my needs. I left the clinic feeling informed, supported, and confident in the recommended treatment plan. The staff made scheduling and follow-up straightforward, contributing to a smooth and professional experience.",
+//   "The visit exceeded expectations. Each part of the appointment was handled with care and attention. Explanations were clear, and all questions were answered patiently. I felt reassured throughout the visit and confident in the treatment recommendations provided, with staff support making the process seamless.",
+//   "The consultation was very detailed and informative. Every question was answered with patience, and all concerns were addressed thoroughly. The staff were helpful and organized, making the experience smooth. I left feeling well-informed, confident in the treatment plan, and cared for throughout the entire visit.",
+//   "I felt very comfortable during the entire consultation. The explanations were clear and easy to understand, and all my health concerns were taken seriously. The staff were professional and attentive, ensuring that the appointment ran smoothly and that all follow-up instructions were provided clearly.",
+//   "The appointment was well-organized and thorough. Each aspect of my concerns was discussed in detail, and the treatment plan was explained carefully. I felt listened to and supported throughout. The staff handled every step efficiently, making the experience professional, reassuring, and stress-free.",
+//   "The consultation provided detailed explanations and guidance. Every question was addressed with patience, and the plan of care was clear and easy to follow. The staff were courteous and helpful, creating a smooth experience that left me feeling confident and reassured about my health and the next steps.",
+// ];
+
+// async function main() {
+//   const reviews = await prisma.doctorReviews.findMany();
+//   let i = 0;
+
+//   for (const review of reviews) {
+//     // Loop messages cyclically if there are more reviews than messages
+//     const message = reviewMessages[i % reviewMessages.length];
+
+//     await prisma.doctorReviews.update({
+//       where: { id: review.id },
+//       data: { comment: message },
+//     });
+
+//     console.log(`✅ Updated review ID: ${review.id}`);
+//     i++;
+//   }
+// }
+
+// main()
+//   .catch(console.error)
+//   .finally(async () => {
+//     await prisma.$disconnect();
+//   });
+
+
+// const { PrismaClient } = require("@prisma/client");
+// const prisma = new PrismaClient();
+
+// const reviewMessages = [
+//   "The consultation was very thorough and professional.",
+//   "The doctor was attentive and explained everything clearly.",
+//   "I felt comfortable and well supported during the appointment.",
+//   "Everything was explained clearly and patiently.",
+//   "A very professional and reassuring experience.",
+//   "The doctor answered all my questions carefully.",
+//   "Very smooth appointment and helpful guidance.",
+//   "Staff were friendly and the consultation was great.",
+//   "Everything was well organized and professional.",
+//   "I left feeling confident about my treatment.",
+// ];
+
+// function randomRating() {
+//   return Math.floor(Math.random() * 6); // 0–5
+// }
+
+// function randomMessage() {
+//   return reviewMessages[Math.floor(Math.random() * reviewMessages.length)];
+// }
+
+// function randomDate() {
+//   const now = new Date();
+//   const past = new Date(now);
+//   past.setDate(now.getDate() - Math.floor(Math.random() * 60));
+//   return past;
+// }
+
+// async function main() {
+//   console.log("Starting appointment + review seeding...");
+
+//   const doctors = await prisma.doctors.findMany();
+//   const patients = await prisma.users.findMany({
+//     where: { role: "PATIENT" },
+//   });
+
+//   if (!doctors.length || !patients.length) {
+//     throw new Error("Doctors or Patients not found.");
+//   }
+
+//   console.log(`Doctors: ${doctors.length}`);
+//   console.log(`Patients: ${patients.length}`);
+
+//   const doctorUsage = new Set();
+
+//   for (const patient of patients) {
+//     const appointmentCount = Math.floor(Math.random() * 5) + 1;
+
+//     const shuffledDoctors = [...doctors].sort(() => 0.5 - Math.random());
+//     const selectedDoctors = shuffledDoctors.slice(0, appointmentCount);
+
+//     for (const doctor of selectedDoctors) {
+//       doctorUsage.add(doctor.id);
+
+//       const appointment = await prisma.appointments.create({
+//         data: {
+//           patientId: patient.id,
+//           doctorId: doctor.id,
+//           appointmentDate: randomDate(),
+//           isCompleted: true,
+//         },
+//       });
+
+//       const rating = randomRating();
+//       const comment = randomMessage();
+
+//       await prisma.$transaction(async (tx) => {
+//         await tx.doctorReviews.create({
+//           data: {
+//             appointmentId: appointment.id,
+//             doctorId: doctor.id,
+//             patientId: patient.id,
+//             rating,
+//             comment,
+//           },
+//         });
+
+//         const doctorStats = await tx.doctors.findUnique({
+//           where: { id: doctor.id },
+//           select: {
+//             ratingAverage: true,
+//             totalReviews: true,
+//           },
+//         });
+
+//         const currentAverage = doctorStats.ratingAverage || 0;
+//         const totalReviews = doctorStats.totalReviews || 0;
+
+//         const newTotal = totalReviews + 1;
+
+//         const newAverage =
+//           newTotal === 0
+//             ? 0
+//             : Number(
+//                 ((currentAverage * totalReviews + rating) / newTotal).toFixed(1),
+//               );
+
+//         await tx.doctors.update({
+//           where: { id: doctor.id },
+//           data: {
+//             ratingAverage: newAverage,
+//             totalReviews: newTotal,
+//           },
+//         });
+//       });
+
+//       console.log(
+//         `Appointment + review created | Patient ${patient.id} -> Doctor ${doctor.id}`,
+//       );
+//     }
+//   }
+
+//   /*
+//   Ensure every doctor has at least one appointment
+//   */
+
+//   const unusedDoctors = doctors.filter((d) => !doctorUsage.has(d.id));
+
+//   for (const doctor of unusedDoctors) {
+//     const patient = patients[Math.floor(Math.random() * patients.length)];
+
+//     const appointment = await prisma.appointments.create({
+//       data: {
+//         patientId: patient.id,
+//         doctorId: doctor.id,
+//         appointmentDate: randomDate(),
+//         isCompleted: true,
+//       },
+//     });
+
+//     const rating = randomRating();
+//     const comment = randomMessage();
+
+//     await prisma.$transaction(async (tx) => {
+//       await tx.doctorReviews.create({
+//         data: {
+//           appointmentId: appointment.id,
+//           doctorId: doctor.id,
+//           patientId: patient.id,
+//           rating,
+//           comment,
+//         },
+//       });
+
+//       const doctorStats = await tx.doctors.findUnique({
+//         where: { id: doctor.id },
+//         select: {
+//           ratingAverage: true,
+//           totalReviews: true,
+//         },
+//       });
+
+//       const currentAverage = doctorStats.ratingAverage || 0;
+//       const totalReviews = doctorStats.totalReviews || 0;
+
+//       const newTotal = totalReviews + 1;
+
+//       const newAverage = Number(
+//         ((currentAverage * totalReviews + rating) / newTotal).toFixed(1),
+//       );
+
+//       await tx.doctors.update({
+//         where: { id: doctor.id },
+//         data: {
+//           ratingAverage: newAverage,
+//           totalReviews: newTotal,
+//         },
+//       });
+//     });
+
+//     console.log(`Ensured doctor usage -> Doctor ${doctor.id}`);
+//   }
+
+//   console.log("Seeding completed successfully.");
+// }
+
+// main()
+//   .catch((err) => {
+//     console.error(err);
+//   })
+//   .finally(async () => {
+//     await prisma.$disconnect();
+//   });
+
+
+// const { PrismaClient } = require("@prisma/client");
+// const prisma = new PrismaClient();
+
+// async function resetTodaySeed() {
+//   const startOfToday = new Date();
+//   startOfToday.setHours(0, 0, 0, 0);
+
+//   const endOfToday = new Date();
+//   endOfToday.setHours(23, 59, 59, 999);
+
+//   // delete today's reviews
+//   await prisma.doctorReviews.deleteMany({
+//   });
+
+//   // delete today's appointments
+//   await prisma.appointments.deleteMany({
+//     where: {
+//       createdAt: {
+//         gte: startOfToday,
+//         lte: endOfToday,
+//       },
+//     },
+//   });
+
+//   // reset affected doctors
+//     await prisma.doctors.updateMany({
+//       data: {
+//         ratingAverage: 0,
+//         totalReviews: 0,
+//       },
+//     });
+
+//   console.log("Today's seeded data removed successfully");
+// }
+
+// resetTodaySeed()
+//   .catch(console.error)
+//   .finally(async () => {
+//     await prisma.$disconnect();
+//   });
+
+
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const reviewMessages = [
-  "The consultation was very thorough and professional. Every concern I had was carefully listened to, and each step of the treatment plan was clearly explained. The staff were friendly and supportive, making the whole experience comfortable and reassuring from start to finish.",
-  "I had a very positive experience during my appointment. The doctor was attentive, patient, and genuinely cared about my health. All my questions were answered thoroughly, and I left feeling confident about the care I received. The clinic was clean, organized, and the staff were extremely helpful.",
-  "The appointment was excellent. I felt heard and supported throughout the visit. Each explanation about my condition and the treatment options was detailed and easy to understand. The follow-up care and guidance provided by the staff added to the reassuring and professional experience.",
-  "The consultation was compassionate and informative. All concerns were addressed carefully, and every aspect of the treatment plan was explained in detail. I felt completely comfortable asking questions and received guidance that made me confident about my next steps and ongoing care.",
-  "The experience was exceptional. The consultation felt personalized and focused entirely on my needs. I left the clinic feeling informed, supported, and confident in the recommended treatment plan. The staff made scheduling and follow-up straightforward, contributing to a smooth and professional experience.",
-  "The visit exceeded expectations. Each part of the appointment was handled with care and attention. Explanations were clear, and all questions were answered patiently. I felt reassured throughout the visit and confident in the treatment recommendations provided, with staff support making the process seamless.",
-  "The consultation was very detailed and informative. Every question was answered with patience, and all concerns were addressed thoroughly. The staff were helpful and organized, making the experience smooth. I left feeling well-informed, confident in the treatment plan, and cared for throughout the entire visit.",
-  "I felt very comfortable during the entire consultation. The explanations were clear and easy to understand, and all my health concerns were taken seriously. The staff were professional and attentive, ensuring that the appointment ran smoothly and that all follow-up instructions were provided clearly.",
-  "The appointment was well-organized and thorough. Each aspect of my concerns was discussed in detail, and the treatment plan was explained carefully. I felt listened to and supported throughout. The staff handled every step efficiently, making the experience professional, reassuring, and stress-free.",
-  "The consultation provided detailed explanations and guidance. Every question was addressed with patience, and the plan of care was clear and easy to follow. The staff were courteous and helpful, creating a smooth experience that left me feeling confident and reassured about my health and the next steps.",
-];
+const reviewMessages = {
+
+  5: [
+    "Excellent consultation and very professional doctor.",
+    "Outstanding care and clear explanations.",
+    "Very satisfied with the treatment advice.",
+    "Great experience from start to finish.",
+    "The doctor was extremely attentive and helpful.",
+    "Professional, kind, and very knowledgeable.",
+    "Everything was explained clearly and patiently.",
+    "Very comfortable and reassuring consultation.",
+    "The appointment exceeded my expectations.",
+    "Highly professional and caring doctor.",
+    "Very thorough and informative visit.",
+    "Great guidance and clear medical advice.",
+    "Exceptional consultation and friendly staff.",
+    "The doctor listened carefully and helped a lot.",
+    "Very positive and reassuring experience.",
+    "Everything was handled professionally.",
+    "The doctor took time to answer all questions.",
+    "Excellent communication and treatment plan.",
+    "Very smooth and comfortable consultation.",
+    "Highly recommended doctor and clinic."
+  ],
+
+  4: [
+    "Very good consultation and helpful advice.",
+    "Doctor explained the condition clearly.",
+    "Good experience and professional service.",
+    "Satisfied with the consultation overall.",
+    "Doctor was attentive and informative.",
+    "Helpful guidance and clear instructions.",
+    "A positive and reassuring appointment.",
+    "The consultation went very smoothly.",
+    "Good care and professional behavior.",
+    "Doctor answered my questions well.",
+    "Very supportive and polite doctor.",
+    "The visit was well organized.",
+    "Clear explanation and helpful advice.",
+    "Professional consultation overall.",
+    "Good experience with the doctor.",
+    "Helpful treatment suggestions provided.",
+    "Doctor was patient and attentive.",
+    "The appointment was comfortable.",
+    "Friendly staff and good service.",
+    "Overall a very good experience."
+  ],
+
+  3: [
+    "The appointment was okay and informative.",
+    "Doctor answered most of my questions.",
+    "A fairly decent consultation.",
+    "The experience was satisfactory.",
+    "Consultation was helpful overall.",
+    "Doctor provided basic guidance.",
+    "The visit was acceptable.",
+    "A standard medical consultation.",
+    "The doctor explained the situation reasonably well.",
+    "It was an average experience.",
+    "Consultation met basic expectations.",
+    "Doctor was polite and informative.",
+    "A normal clinic experience.",
+    "The appointment went smoothly.",
+    "The doctor provided helpful input.",
+    "Overall an acceptable consultation.",
+    "The visit was simple and straightforward.",
+    "Doctor listened and responded appropriately.",
+    "A fairly typical medical appointment.",
+    "Reasonably helpful consultation."
+  ]
+
+};
+function getRandomMessage(rating) {
+  const msgs = reviewMessages[rating];
+  return msgs[Math.floor(Math.random() * msgs.length)];
+}
+
+function randomRating() {
+  const r = Math.random();
+
+  if (r < 0.55) return 5;
+  if (r < 0.85) return 4;
+  return 3;
+}
 
 async function main() {
+  console.log("Updating existing reviews...");
+
   const reviews = await prisma.doctorReviews.findMany();
-  let i = 0;
 
   for (const review of reviews) {
-    // Loop messages cyclically if there are more reviews than messages
-    const message = reviewMessages[i % reviewMessages.length];
+    let rating = review.rating;
+
+    // enforce minimum rating 3
+    if (!rating || rating < 3) {
+      rating = randomRating();
+    }
+
+    const comment = getRandomMessage(rating);
 
     await prisma.doctorReviews.update({
       where: { id: review.id },
-      data: { comment: message },
+      data: {
+        rating,
+        comment,
+      },
     });
 
-    console.log(`✅ Updated review ID: ${review.id}`);
-    i++;
+    console.log(`Updated review ${review.id} -> rating ${rating}`);
   }
+
+  console.log("Recalculating doctor averages...");
+
+  const doctors = await prisma.doctors.findMany({
+    select: { id: true },
+  });
+
+  for (const doctor of doctors) {
+    const agg = await prisma.doctorReviews.aggregate({
+      where: { doctorId: doctor.id },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    const avg = agg._avg.rating
+      ? Number(agg._avg.rating.toFixed(1))
+      : 0;
+
+    await prisma.doctors.update({
+      where: { id: doctor.id },
+      data: {
+        ratingAverage: avg,
+      },
+    });
+
+    console.log(`Doctor ${doctor.id} average updated -> ${avg}`);
+  }
+
+  console.log("Review correction completed.");
 }
 
 main()

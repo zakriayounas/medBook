@@ -207,6 +207,7 @@ export const GET = async (req) => {
     return NextResponse.json({
       status: 200,
       averageRating,
+      totalReviews: total,
       reviews,
       pagination: {
         total,
