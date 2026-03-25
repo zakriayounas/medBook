@@ -60,19 +60,21 @@ model Appointments {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   transactions    Transaction[]
+  reviews          DoctorReviews[]
 }
 
 model DoctorReviews {
-  id            String   @id @default(uuid())
+  id            String       @id @default(uuid())
   doctorId      Int
   patientId     Int
-  appointmentId Int
-  comment       String?  @db.Text
+  appointmentId Int?
+  comment       String?      @db.Text
   rating        Int?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  doctor        Doctors  @relation(fields: [doctorId], references: [id])
-  patient       Users    @relation(fields: [patientId], references: [id])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  doctor        Doctors      @relation(fields: [doctorId], references: [id])
+  patient       Users        @relation(fields: [patientId], references: [id])
+  appointment   Appointments? @relation(fields: [appointmentId], references: [id])
 
   @@unique([patientId, appointmentId])
 }

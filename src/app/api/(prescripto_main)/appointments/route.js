@@ -3,8 +3,8 @@ import { validateIsDoctorExists } from "../../../../../lib/doctorHelper";
 import { checkDoctorAvailability } from "../../../../../lib/doctorSchedule";
 import prisma from "../../../../../lib/prisma";
 import {
-    extractLoggedUserDetail,
-    getQueryFilters,
+  extractLoggedUserDetail,
+  getQueryFilters,
 } from "../../../../../lib/UserHelpers";
 const fieldsIncludeObj = (userRole) => {
   return {
@@ -33,6 +33,13 @@ const fieldsIncludeObj = (userRole) => {
         },
       },
     }),
+    reviews: {
+      select: {
+        comment: true,
+        rating: true,
+        createdAt: true,
+      },
+    },
     transactions: {
       select: {
         id: true,
@@ -100,7 +107,10 @@ export const POST = async (req) => {
       );
     }
 
-    const { exists } = await validateIsDoctorExists({ id: doctorId, profile: { deletedAt: null }});
+    const { exists } = await validateIsDoctorExists({
+      id: doctorId,
+      profile: { deletedAt: null },
+    });
     if (!exists) {
       return NextResponse.json(
         {
