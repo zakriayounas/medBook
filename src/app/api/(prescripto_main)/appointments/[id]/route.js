@@ -1,20 +1,32 @@
 import { NextResponse } from "next/server";
-import { getIdFromParams } from "../../../../../../lib/UserHelpers";
+import {
+  extractLoggedUserDetail,
+  getIdFromParams,
+} from "../../../../../../lib/UserHelpers";
 import prisma from "../../../../../../lib/prisma";
 
 export const POST = async (req, { params }) => {
   try {
-    const { action = "cancel" } = await req.json();
+    const { userId } = extractLoggedUserDetail(req);
+    const { action = "cancel", note } = await req.json();
     const id = getIdFromParams(params);
 
     let updateData = {};
     let message = "";
 
     if (action === "cancel") {
-      updateData = { isCancel: true };
+      updateData = {
+        isCancel: true,
+        cancellationReason: note,
+        canceledByUserId: userId,
+      };
       message = "Appointment cancelled successfully!";
     } else if (action === "complete") {
-      updateData = { isCompleted: true };
+      updateData = {
+        isCompleted: true,
+        completionSummary: note,
+        completedByUserId: userId,
+      };
       message = "Appointment marked as completed!";
     } else {
       return NextResponse.json({ status: 400, message: "Invalid action" });

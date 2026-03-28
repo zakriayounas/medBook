@@ -49,31 +49,35 @@ model Doctors {
 }
 
 model Appointments {
-  id              Int           @id @default(autoincrement())
-  appointmentDate DateTime
-  patientId       Int
-  patient         Users         @relation(fields: [patientId], references: [id])
-  doctorId        Int
-  doctor          Doctors       @relation(fields: [doctorId], references: [id])
-  isCancel        Boolean       @default(false)
-  isCompleted     Boolean       @default(false)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  transactions    Transaction[]
-  reviews          DoctorReviews[]
+  id                 Int             @id @default(autoincrement())
+  appointmentDate    DateTime
+  patientId          Int
+  patient            Users           @relation(fields: [patientId], references: [id])
+  doctorId           Int
+  doctor             Doctors         @relation(fields: [doctorId], references: [id])
+  isCancel           Boolean         @default(false)
+  isCompleted        Boolean         @default(false)
+  canceledByUserId   Int?
+  completedByUserId  Int?
+  cancellationReason String?         @db.Text
+  completionSummary  String?         @db.Text
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  transactions       Transaction[]
+  reviews            DoctorReviews[]
 }
 
 model DoctorReviews {
-  id            String       @id @default(uuid())
+  id            String        @id @default(uuid())
   doctorId      Int
   patientId     Int
   appointmentId Int?
-  comment       String?      @db.Text
+  comment       String?       @db.Text
   rating        Int?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  doctor        Doctors      @relation(fields: [doctorId], references: [id])
-  patient       Users        @relation(fields: [patientId], references: [id])
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  doctor        Doctors       @relation(fields: [doctorId], references: [id])
+  patient       Users         @relation(fields: [patientId], references: [id])
   appointment   Appointments? @relation(fields: [appointmentId], references: [id])
 
   @@unique([patientId, appointmentId])
