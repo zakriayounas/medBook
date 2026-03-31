@@ -6,7 +6,7 @@ import {
 
 export const GET = async (req) => {
   const { whereClause, limitRecords, skipRecords, orderBy, page } =
-    getQueryFilters(req, "PATIENT");
+    getQueryFilters(req, "patient");
   const patientQuery = {
     ...whereClause,
     role: "PATIENT",

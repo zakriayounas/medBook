@@ -10,7 +10,7 @@ import { toBoolean } from "../../../../../utils/helpers";
 
 export const GET = async (req) => {
   const { whereClause, limitRecords, skipRecords, orderBy, page } =
-    getQueryFilters(req);
+    getQueryFilters(req, "doctor");
   const doctorsWhereClause = {
     ...whereClause,
     profile: {

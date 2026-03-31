@@ -52,7 +52,7 @@ const fieldsIncludeObj = (userRole) => {
 
 export const GET = async (req) => {
   const { whereClause, limitRecords, skipRecords, orderBy, userRole, page } =
-    getQueryFilters(req);
+    getQueryFilters(req, "appointments");
   try {
     const total = await prisma.appointments.count({
       where: whereClause,
