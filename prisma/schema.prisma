@@ -30,22 +30,23 @@ model Users {
 }
 
 model Doctors {
-  id              Int               @id @default(autoincrement())
-  userId          Int               @unique
-  specialty       Specialty
-  degree          String
-  experience      Int
-  fee             Int
-  about           String?           @db.Text
-  isActive        Boolean           @default(true)
-  ratingAverage   Float             @default(0)
-  totalReviews    Int               @default(0)
-  profile         Users             @relation(fields: [userId], references: [id])
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  Appointment     Appointments[]
-  DoctorSchedules DoctorSchedules[]
-  reviews         DoctorReviews[]
+  id               Int               @id @default(autoincrement())
+  userId           Int               @unique
+  specialty        Specialty
+  degree           String
+  experience       Int
+  fee              Int
+  about            String?           @db.Text
+  isActive         Boolean           @default(true)
+  consultationType String?
+  ratingAverage    Float             @default(0)
+  totalReviews     Int               @default(0)
+  profile          Users             @relation(fields: [userId], references: [id])
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  appointments     Appointments[]
+  DoctorSchedules  DoctorSchedules[]
+  reviews          DoctorReviews[]
 }
 
 model Appointments {

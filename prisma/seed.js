@@ -721,152 +721,202 @@ ${name} is dedicated to helping patients restore movement, reduce pain, and retu
 //   });
 
 
+// const { PrismaClient } = require("@prisma/client");
+// const prisma = new PrismaClient();
+
+// const reviewMessages = {
+
+//   5: [
+//     "Excellent consultation and very professional doctor.",
+//     "Outstanding care and clear explanations.",
+//     "Very satisfied with the treatment advice.",
+//     "Great experience from start to finish.",
+//     "The doctor was extremely attentive and helpful.",
+//     "Professional, kind, and very knowledgeable.",
+//     "Everything was explained clearly and patiently.",
+//     "Very comfortable and reassuring consultation.",
+//     "The appointment exceeded my expectations.",
+//     "Highly professional and caring doctor.",
+//     "Very thorough and informative visit.",
+//     "Great guidance and clear medical advice.",
+//     "Exceptional consultation and friendly staff.",
+//     "The doctor listened carefully and helped a lot.",
+//     "Very positive and reassuring experience.",
+//     "Everything was handled professionally.",
+//     "The doctor took time to answer all questions.",
+//     "Excellent communication and treatment plan.",
+//     "Very smooth and comfortable consultation.",
+//     "Highly recommended doctor and clinic."
+//   ],
+
+//   4: [
+//     "Very good consultation and helpful advice.",
+//     "Doctor explained the condition clearly.",
+//     "Good experience and professional service.",
+//     "Satisfied with the consultation overall.",
+//     "Doctor was attentive and informative.",
+//     "Helpful guidance and clear instructions.",
+//     "A positive and reassuring appointment.",
+//     "The consultation went very smoothly.",
+//     "Good care and professional behavior.",
+//     "Doctor answered my questions well.",
+//     "Very supportive and polite doctor.",
+//     "The visit was well organized.",
+//     "Clear explanation and helpful advice.",
+//     "Professional consultation overall.",
+//     "Good experience with the doctor.",
+//     "Helpful treatment suggestions provided.",
+//     "Doctor was patient and attentive.",
+//     "The appointment was comfortable.",
+//     "Friendly staff and good service.",
+//     "Overall a very good experience."
+//   ],
+
+//   3: [
+//     "The appointment was okay and informative.",
+//     "Doctor answered most of my questions.",
+//     "A fairly decent consultation.",
+//     "The experience was satisfactory.",
+//     "Consultation was helpful overall.",
+//     "Doctor provided basic guidance.",
+//     "The visit was acceptable.",
+//     "A standard medical consultation.",
+//     "The doctor explained the situation reasonably well.",
+//     "It was an average experience.",
+//     "Consultation met basic expectations.",
+//     "Doctor was polite and informative.",
+//     "A normal clinic experience.",
+//     "The appointment went smoothly.",
+//     "The doctor provided helpful input.",
+//     "Overall an acceptable consultation.",
+//     "The visit was simple and straightforward.",
+//     "Doctor listened and responded appropriately.",
+//     "A fairly typical medical appointment.",
+//     "Reasonably helpful consultation."
+//   ]
+
+// };
+// function getRandomMessage(rating) {
+//   const msgs = reviewMessages[rating];
+//   return msgs[Math.floor(Math.random() * msgs.length)];
+// }
+
+// function randomRating() {
+//   const r = Math.random();
+
+//   if (r < 0.55) return 5;
+//   if (r < 0.85) return 4;
+//   return 3;
+// }
+
+// async function main() {
+//   console.log("Updating existing reviews...");
+
+//   const reviews = await prisma.doctorReviews.findMany();
+
+//   for (const review of reviews) {
+//     let rating = review.rating;
+
+//     // enforce minimum rating 3
+//     if (!rating || rating < 3) {
+//       rating = randomRating();
+//     }
+
+//     const comment = getRandomMessage(rating);
+
+//     await prisma.doctorReviews.update({
+//       where: { id: review.id },
+//       data: {
+//         rating,
+//         comment,
+//       },
+//     });
+
+//     console.log(`Updated review ${review.id} -> rating ${rating}`);
+//   }
+
+//   console.log("Recalculating doctor averages...");
+
+//   const doctors = await prisma.doctors.findMany({
+//     select: { id: true },
+//   });
+
+//   for (const doctor of doctors) {
+//     const agg = await prisma.doctorReviews.aggregate({
+//       where: { doctorId: doctor.id },
+//       _avg: { rating: true },
+//       _count: { rating: true },
+//     });
+
+//     const avg = agg._avg.rating
+//       ? Number(agg._avg.rating.toFixed(1))
+//       : 0;
+
+//     await prisma.doctors.update({
+//       where: { id: doctor.id },
+//       data: {
+//         ratingAverage: avg,
+//       },
+//     });
+
+//     console.log(`Doctor ${doctor.id} average updated -> ${avg}`);
+//   }
+
+//   console.log("Review correction completed.");
+// }
+
+// main()
+//   .catch(console.error)
+//   .finally(async () => {
+//     await prisma.$disconnect();
+//   });
+
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const reviewMessages = {
-
-  5: [
-    "Excellent consultation and very professional doctor.",
-    "Outstanding care and clear explanations.",
-    "Very satisfied with the treatment advice.",
-    "Great experience from start to finish.",
-    "The doctor was extremely attentive and helpful.",
-    "Professional, kind, and very knowledgeable.",
-    "Everything was explained clearly and patiently.",
-    "Very comfortable and reassuring consultation.",
-    "The appointment exceeded my expectations.",
-    "Highly professional and caring doctor.",
-    "Very thorough and informative visit.",
-    "Great guidance and clear medical advice.",
-    "Exceptional consultation and friendly staff.",
-    "The doctor listened carefully and helped a lot.",
-    "Very positive and reassuring experience.",
-    "Everything was handled professionally.",
-    "The doctor took time to answer all questions.",
-    "Excellent communication and treatment plan.",
-    "Very smooth and comfortable consultation.",
-    "Highly recommended doctor and clinic."
-  ],
-
-  4: [
-    "Very good consultation and helpful advice.",
-    "Doctor explained the condition clearly.",
-    "Good experience and professional service.",
-    "Satisfied with the consultation overall.",
-    "Doctor was attentive and informative.",
-    "Helpful guidance and clear instructions.",
-    "A positive and reassuring appointment.",
-    "The consultation went very smoothly.",
-    "Good care and professional behavior.",
-    "Doctor answered my questions well.",
-    "Very supportive and polite doctor.",
-    "The visit was well organized.",
-    "Clear explanation and helpful advice.",
-    "Professional consultation overall.",
-    "Good experience with the doctor.",
-    "Helpful treatment suggestions provided.",
-    "Doctor was patient and attentive.",
-    "The appointment was comfortable.",
-    "Friendly staff and good service.",
-    "Overall a very good experience."
-  ],
-
-  3: [
-    "The appointment was okay and informative.",
-    "Doctor answered most of my questions.",
-    "A fairly decent consultation.",
-    "The experience was satisfactory.",
-    "Consultation was helpful overall.",
-    "Doctor provided basic guidance.",
-    "The visit was acceptable.",
-    "A standard medical consultation.",
-    "The doctor explained the situation reasonably well.",
-    "It was an average experience.",
-    "Consultation met basic expectations.",
-    "Doctor was polite and informative.",
-    "A normal clinic experience.",
-    "The appointment went smoothly.",
-    "The doctor provided helpful input.",
-    "Overall an acceptable consultation.",
-    "The visit was simple and straightforward.",
-    "Doctor listened and responded appropriately.",
-    "A fairly typical medical appointment.",
-    "Reasonably helpful consultation."
-  ]
-
-};
-function getRandomMessage(rating) {
-  const msgs = reviewMessages[rating];
-  return msgs[Math.floor(Math.random() * msgs.length)];
-}
-
-function randomRating() {
-  const r = Math.random();
-
-  if (r < 0.55) return 5;
-  if (r < 0.85) return 4;
-  return 3;
-}
-
 async function main() {
-  console.log("Updating existing reviews...");
-
-  const reviews = await prisma.doctorReviews.findMany();
-
-  for (const review of reviews) {
-    let rating = review.rating;
-
-    // enforce minimum rating 3
-    if (!rating || rating < 3) {
-      rating = randomRating();
-    }
-
-    const comment = getRandomMessage(rating);
-
-    await prisma.doctorReviews.update({
-      where: { id: review.id },
-      data: {
-        rating,
-        comment,
-      },
-    });
-
-    console.log(`Updated review ${review.id} -> rating ${rating}`);
-  }
-
-  console.log("Recalculating doctor averages...");
+  console.log("🔄 Checking doctors with missing consultationType...");
 
   const doctors = await prisma.doctors.findMany({
+    where: { consultationType: null },
     select: { id: true },
   });
 
-  for (const doctor of doctors) {
-    const agg = await prisma.doctorReviews.aggregate({
-      where: { doctorId: doctor.id },
-      _avg: { rating: true },
-      _count: { rating: true },
-    });
+  if (!doctors.length) {
+    console.log("✅ No doctors found with null consultationType. Nothing to update.");
+    return;
+  }
 
-    const avg = agg._avg.rating
-      ? Number(agg._avg.rating.toFixed(1))
-      : 0;
+  console.log(`🧑‍⚕️ Found ${doctors.length} doctors to update...\n`);
+
+  const consultationTypes = ["online", "clinic"];
+
+  let updatedCount = 0;
+
+  for (const doctor of doctors) {
+    const randomType =
+      consultationTypes[Math.floor(Math.random() * consultationTypes.length)];
 
     await prisma.doctors.update({
       where: { id: doctor.id },
       data: {
-        ratingAverage: avg,
+        consultationType: randomType,
       },
     });
 
-    console.log(`Doctor ${doctor.id} average updated -> ${avg}`);
+    updatedCount++;
+    console.log(
+      `✔️ Doctor ${doctor.id} updated → ${randomType} (${updatedCount}/${doctors.length})`
+    );
   }
 
-  console.log("Review correction completed.");
+  console.log(`\n🎉 Update completed! Total updated: ${updatedCount}`);
 }
 
 main()
-  .catch(console.error)
+  .catch((err) => {
+    console.error("❌ Error updating doctors:", err);
+  })
   .finally(async () => {
     await prisma.$disconnect();
   });
