@@ -9,6 +9,7 @@ export const GET = async (req, { params }) => {
     const patient = await prisma.users.findFirst({
       where: {
         id,
+        role: "PATIENT",
       },
       include: {
         appointments: true,
@@ -16,6 +17,9 @@ export const GET = async (req, { params }) => {
         reviews: true,
       },
     });
+    if (!patient) {
+      return NextResponse.json({ status: 404, message: "Patient not found" });
+    }
     return NextResponse.json({
       status: 200,
       patient,
