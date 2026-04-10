@@ -8,16 +8,28 @@ export const GET = async (req) => {
         role: "DOCTOR",
       },
       select: {
-        id: true,
         name: true,
         profileImage: true,
         profileColor: true,
-        uuid: true,
+        doctor: {
+          select: {
+            id: true,
+            uuid: true,
+          },
+        },
       },
     });
+    const formattedDoctors = doctors.map((doctor) => ({
+      name: doctor.name,
+      profileImage: doctor.profileImage,
+      profileColor: doctor.profileColor,
+      id: doctor.doctor.id,
+      uuid: doctor.doctor.uuid,
+    }));
+
     return NextResponse.json({
       status: 200,
-      doctors,
+      doctors: formattedDoctors,
     });
   } catch (error) {
     return NextResponse.json({
