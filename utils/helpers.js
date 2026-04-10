@@ -73,3 +73,5 @@ export const toBoolean = (value) => {
   if (value === 0 || value === "0") return false;
   return false;
 };
+
+export const isNumericId = (id) => /^\d+$/.test(String(id));

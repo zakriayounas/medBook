@@ -9,7 +9,7 @@ import {
   getIdFromParams,
   getUserWithoutPassword,
 } from "../../../../../../lib/UserHelpers";
-import { toBoolean } from "../../../../../../utils/helpers";
+import { isNumericId, toBoolean } from "../../../../../../utils/helpers";
 // Example usage in your GET function
 export const GET = async (req, { params }) => {
   try {
@@ -17,7 +17,10 @@ export const GET = async (req, { params }) => {
 
     // Fetch the main doctor
     const doctor = await prisma.doctors.findUnique({
-      where: { id, profile: { deletedAt: null }},
+      where: {
+        ...(isNumericId(id) ? { id: parseInt(id, 10) } : { uuid: id }),
+        profile: { deletedAt: null },
+      },
       include: {
         profile: true,
       },
@@ -34,8 +37,10 @@ export const GET = async (req, { params }) => {
     const relatedDoctors = await prisma.doctors.findMany({
       where: {
         specialty,
-        NOT: { id },
-        profile: { deletedAt: null }
+        NOT: {
+          ...(isNumericId(id) ? { id: parseInt(id, 10) } : { uuid: id }),
+        },
+        profile: { deletedAt: null },
       },
       take: 6,
       include: {
@@ -51,7 +56,9 @@ export const GET = async (req, { params }) => {
     // Fetch appointments from the appointment table for the doctor for the next 7 days
     const weeklyBookings = await prisma.appointments.findMany({
       where: {
-        doctorId: id,
+        doctor: {
+          ...(isNumericId(id) ? { id: parseInt(id, 10) } : { uuid: id }),
+        },
         appointmentDate: {
           gte: currentDate, // appointments from now
           lt: endDate, // until 7 days later (exclusive)
@@ -102,7 +109,10 @@ export const POST = async (req, { params }) => {
     } = data;
     // Step 1: Check if doctor exists
     const existingDoctor = await prisma.doctors.findUnique({
-      where: { id, profile: { deletedAt: null }},
+      where: {
+        ...(isNumericId(id) ? { id: parseInt(id, 10) } : { uuid: id }),
+        profile: { deletedAt: null },
+      },
     });
 
     if (!existingDoctor) {
@@ -157,7 +167,7 @@ export const POST = async (req, { params }) => {
 
     // Step 5: Update doctor
     const updatedDoctor = await prisma.doctors.update({
-      where: { id },
+      where: { ...(isNumericId(id) ? { id: parseInt(id, 10) } : { uuid: id }) },
       data: doctorUpdateData,
     });
 
@@ -198,14 +208,17 @@ export const DELETE = async (req, { params }) => {
   try {
     const id = getIdFromParams(params);
     const doctor = await prisma.doctors.findUnique({
-      where: { id, profile: { deletedAt: null }},
+      where: {
+        ...(isNumericId(id) ? { id: parseInt(id, 10) } : { uuid: id }),
+        profile: { deletedAt: null },
+      },
     });
     if (!doctor) {
       return NextResponse.json({ status: 404, message: "Doctor not found" });
     }
     await prisma.users.update({
       where: {
-        id: doctor.userId
+        id: doctor.userId,
       },
       data: {
         deletedAt: new Date(),

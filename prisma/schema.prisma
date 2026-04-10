@@ -9,6 +9,7 @@ datasource db {
 
 model Users {
   id              Int             @id @default(autoincrement())
+  uuid            String?         @default(uuid())
   email           String          @unique
   name            String
   password        String
@@ -31,6 +32,7 @@ model Users {
 
 model Doctors {
   id               Int               @id @default(autoincrement())
+  uuid             String?           @default(uuid())
   userId           Int               @unique
   specialty        Specialty
   degree           String
@@ -51,6 +53,7 @@ model Doctors {
 
 model Appointments {
   id                 Int             @id @default(autoincrement())
+  uuid               String?         @default(uuid())
   appointmentDate    DateTime
   patientId          Int
   patient            Users           @relation(fields: [patientId], references: [id])
@@ -86,6 +89,7 @@ model DoctorReviews {
 
 model Transaction {
   id                    Int      @id @default(autoincrement())
+  uuid                  String?  @default(uuid())
   appointmentId         Int?
   userId                Int?
   stripePaymentIntentId String
@@ -100,6 +104,7 @@ model Transaction {
 
 model DoctorSchedules {
   scheduleId Int       @id @default(autoincrement())
+  uuid       String?   @default(uuid())
   doctorId   Int
   day        DayOfWeek
   duration   Int       @default(30)

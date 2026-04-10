@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { headers } from "next/headers";
 import prisma from "../../../../../../lib/prisma";
-
+import { v4 as uuidv4 } from "uuid";
 export const config = {
     api: {
         bodyParser: false, // Required to get raw body
@@ -51,6 +51,7 @@ export async function POST(req) {
                     stripePaymentIntentId: paymentIntentId,
                     amount,
                     status: "succeeded",
+                    uuid: uuidv4(),
                 },
             });
         } catch (err) {

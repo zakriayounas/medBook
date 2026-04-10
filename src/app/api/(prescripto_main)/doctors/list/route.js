@@ -10,6 +10,9 @@ export const GET = async (req) => {
       select: {
         id: true,
         name: true,
+        profileImage: true,
+        profileColor: true,
+        uuid: true,
       },
     });
     return NextResponse.json({

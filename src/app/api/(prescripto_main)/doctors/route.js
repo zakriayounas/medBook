@@ -7,7 +7,7 @@ import {
 } from "../../../../../lib/UserHelpers";
 import { validateRequiredFields } from "../../../../../lib/validator";
 import { toBoolean } from "../../../../../utils/helpers";
-
+import { v4 as uuidv4 } from "uuid";
 export const GET = async (req) => {
   const { whereClause, limitRecords, skipRecords, orderBy, page } =
     getQueryFilters(req, "doctor");
@@ -119,6 +119,7 @@ export const POST = async (req) => {
         about: about || undefined,
         isActive: toBoolean(isActive),
         userId: newUser.user.id,
+        uuid: uuidv4(),
       },
       include: {
         profile: true,

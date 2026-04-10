@@ -6,6 +6,7 @@ import {
   extractLoggedUserDetail,
   getQueryFilters,
 } from "../../../../../lib/UserHelpers";
+import { v4 as uuidv4 } from "uuid";
 const fieldsIncludeObj = (userRole) => {
   return {
     ...(userRole !== "DOCTOR" && {
@@ -139,6 +140,7 @@ export const POST = async (req) => {
         appointmentDate: new Date(appointmentDate),
         doctorId,
         patientId: userId,
+        uuid: uuidv4(),
       },
     });
 
