@@ -6,6 +6,9 @@ export const GET = async (req) => {
     const doctors = await prisma.users.findMany({
       where: {
         role: "DOCTOR",
+        doctor: {
+          isNot: null,
+        },
       },
       select: {
         name: true,
@@ -26,7 +29,7 @@ export const GET = async (req) => {
       id: doctor.doctor.id,
       uuid: doctor.doctor.uuid,
     }));
-
+    console.log("Fetched doctors:", formattedDoctors);
     return NextResponse.json({
       status: 200,
       doctors: formattedDoctors,
